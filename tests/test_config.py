@@ -22,6 +22,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
                 "AWTRIX_APP_NAME=dotenv-app",
                 "AWTRIX_APP_DURATION=9",
                 "GITHUB_CONTRIB_COLOR_MODE=purple",
+                "GITHUB_CONTRIB_VELOCITY=true",
             ]
         )
     )
@@ -33,6 +34,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
         awtrix_app_name="cli-app",
         awtrix_app_duration="12",
         color_mode="yellow",
+        velocity=False,
         env_file=env_file,
         environ={},
     )
@@ -43,6 +45,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
     assert config.awtrix_app_name == "cli-app"
     assert config.awtrix_app_duration == 12
     assert config.color_mode == "yellow"
+    assert config.velocity is False
 
 
 def test_environment_overrides_dotenv(tmp_path: Path) -> None:
@@ -78,6 +81,7 @@ def test_can_resolve_awtrix_without_github(tmp_path: Path) -> None:
     assert config.awtrix_app_name == DEFAULT_AWTRIX_APP_NAME
     assert config.awtrix_app_duration == DEFAULT_AWTRIX_APP_DURATION
     assert config.color_mode == "github"
+    assert config.velocity is False
 
 
 @pytest.mark.parametrize("duration", ["nope", "0", "-1"])
@@ -87,4 +91,25 @@ def test_invalid_awtrix_duration_fails(duration: str) -> None:
             require_github=False,
             awtrix_app_duration=duration,
             environ={},
+        )
+
+
+def test_velocity_env_accepts_true_false(tmp_path: Path) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("GITHUB_TOKEN=token\nGITHUB_LOGIN=login\n")
+
+    config = resolve_config(
+        env_file=env_file,
+        environ={"GITHUB_CONTRIB_VELOCITY": "yes"},
+    )
+
+    assert config.velocity is True
+
+
+def test_invalid_velocity_env_fails() -> None:
+    with pytest.raises(ValueError, match="GITHUB_CONTRIB_VELOCITY"):
+        resolve_config(
+            require_github=False,
+            velocity=None,
+            environ={"GITHUB_CONTRIB_VELOCITY": "maybe"},
         )

@@ -49,6 +49,7 @@ class AwtrixClient:
         *,
         duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
         color_mode: ColorMode = "github",
+        velocity: bool = False,
     ) -> None:
         self.update_app(
             app_name,
@@ -56,6 +57,7 @@ class AwtrixClient:
                 grid,
                 duration_seconds=duration_seconds,
                 color_mode=color_mode,
+                velocity=velocity,
             ),
         )
 
@@ -108,6 +110,7 @@ def grid_payload(
     *,
     duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
     color_mode: ColorMode = "github",
+    velocity: bool = False,
 ) -> dict[str, Any]:
     return {
         "draw": [
@@ -119,7 +122,11 @@ def grid_payload(
                     FRAME_HEIGHT,
                     [
                         _hex_to_rgb888(color)
-                        for row in frame_colors(grid, color_mode=color_mode)
+                        for row in frame_colors(
+                            grid,
+                            color_mode=color_mode,
+                            velocity=velocity,
+                        )
                         for color in row
                     ],
                 ]
