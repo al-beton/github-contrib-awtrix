@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from pathlib import Path
 
 from PIL import Image
@@ -44,6 +45,15 @@ def test_velocity_overlay_draws_over_bottom_left(sample_grid: ContributionGrid) 
     assert colors[-1] != ["#000000"] * 32
 
 
+def test_velocity_decimal_point_is_tight() -> None:
+    grid = _grid_with_counts([1, 1, 1, 1, 1, 1, 1, 1, 1, 0])
+
+    colors = frame_colors(grid, color_mode="green", velocity=True)
+
+    assert colors[7][4] == VELOCITY_COLOR
+    assert colors[7][5] == VELOCITY_COLOR
+
+
 def test_display_color_modes_have_distinct_scales(
 ) -> None:
     days = [
@@ -86,3 +96,23 @@ def test_display_color_modes_have_distinct_scales(
         "#ffd60a",
         "#ffffff",
     ]
+
+
+def _grid_with_counts(counts: list[int]) -> ContributionGrid:
+    start = date(2026, 5, 1)
+    count_by_index = dict(enumerate(counts))
+    days = [
+        ContributionDay(
+            date=(start + timedelta(days=index)).isoformat(),
+            weekday=index % 7,
+            contribution_count=count_by_index.get(index, 0),
+            contribution_level="NONE",
+            color="#000000",
+        )
+        for index in range(32 * 7)
+    ]
+    return ContributionGrid(
+        login="al-beton",
+        generated_at=(start + timedelta(days=len(counts) - 1)).isoformat(),
+        weeks=[days[index : index + 7] for index in range(0, len(days), 7)],
+    )
