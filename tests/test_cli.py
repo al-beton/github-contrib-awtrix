@@ -294,7 +294,7 @@ def test_commit_search_source_does_not_require_login_or_repo(
     assert pushed == ["purple"]
 
 
-def test_commit_search_source_requires_author_email(
+def test_commit_search_source_requires_at_least_one_filter(
     monkeypatch,
     sample_grid: ContributionGrid,
 ) -> None:
@@ -317,6 +317,37 @@ def test_commit_search_source_requires_author_email(
         )
 
     assert exc_info.value.code == 1
+
+
+def test_commit_search_source_allows_org_without_author_email(
+    monkeypatch,
+    sample_grid: ContributionGrid,
+) -> None:
+    calls: list[tuple[str | None, str | None]] = []
+
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(
+        cli,
+        "fetch_commit_search_grid",
+        lambda **kwargs: calls.append((kwargs["author_email"], kwargs["org"]))
+        or sample_grid,
+    )
+    monkeypatch.setattr(cli.AwtrixClient, "push_grid", lambda *_, **__: None)
+
+    exit_code = cli.main(
+        [
+            "push",
+            "--source",
+            "commit-search",
+            "--org",
+            "AdvantageLabs",
+        ]
+    )
+
+    assert exit_code == 0
+    assert calls == [(None, "AdvantageLabs")]
 
 
 def test_commit_search_source_writes_outputs_before_push(
