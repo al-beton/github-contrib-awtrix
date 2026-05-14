@@ -24,6 +24,7 @@ GITHUB_LOGIN=al-beton
 AWTRIX_URL=http://awtrix_xxxxxx.local
 AWTRIX_APP_NAME=github_contribution_graph
 AWTRIX_APP_DURATION=7
+GITHUB_CONTRIB_COLOR_MODE=github
 ```
 
 Overrides are command-specific and must appear after the subcommand:
@@ -31,7 +32,7 @@ Overrides are command-specific and must appear after the subcommand:
 ```text
 doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
-push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
+push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode
 uninstall: --awtrix-url, --awtrix-app-name
 ```
 
@@ -43,6 +44,7 @@ No command prints help and does nothing.
 github-contrib-awtrix doctor
 github-contrib-awtrix install
 github-contrib-awtrix push \
+  --color-mode green \
   --json out/grid.json \
   --terminal \
   --png out/preview.png
@@ -54,6 +56,14 @@ code to install. `install` creates the named page with a placeholder; `push`
 updates that page with the current contribution grid.
 
 `push` fetches once, then renders each requested output from the same data.
+
+Color modes:
+
+- `github`: GitHub's returned colors
+- `matrix`: black empty cells with brighter matrix greens
+- `green`: black empty cells with a green-to-white scale
+- `purple`: black empty cells with a purple-to-white scale
+- `yellow`: black empty cells with an amber/yellow-to-white scale
 
 ## Outputs
 

@@ -11,7 +11,20 @@ Render the GitHub contribution grid as a 32 x 8 frame.
 - row `y = 7` is blank/off
 - older weeks appear on the left
 - the current week appears on the right
-- colors come from GitHub's returned `color`
+- JSON keeps GitHub's returned `color`
+- terminal, PNG, and AWTRIX output use the selected color mode
+
+## Color Modes
+
+- `github`: GitHub's returned colors
+- `matrix`: black empty cells with brighter matrix greens
+- `green`: black empty cells with a green-to-white scale
+- `purple`: black empty cells with a purple-to-white scale
+- `yellow`: black empty cells with an amber/yellow-to-white scale
+
+`GITHUB_CONTRIB_COLOR_MODE` sets the default.
+
+`--color-mode` overrides it for `push`.
 
 ## App Naming
 

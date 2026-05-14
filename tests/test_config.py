@@ -21,6 +21,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
                 "AWTRIX_URL=http://dotenv-awtrix.local",
                 "AWTRIX_APP_NAME=dotenv-app",
                 "AWTRIX_APP_DURATION=9",
+                "GITHUB_CONTRIB_COLOR_MODE=purple",
             ]
         )
     )
@@ -31,6 +32,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
         awtrix_url="http://cli-awtrix.local",
         awtrix_app_name="cli-app",
         awtrix_app_duration="12",
+        color_mode="yellow",
         env_file=env_file,
         environ={},
     )
@@ -40,6 +42,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
     assert config.awtrix_url == "http://cli-awtrix.local"
     assert config.awtrix_app_name == "cli-app"
     assert config.awtrix_app_duration == 12
+    assert config.color_mode == "yellow"
 
 
 def test_environment_overrides_dotenv(tmp_path: Path) -> None:
@@ -74,6 +77,7 @@ def test_can_resolve_awtrix_without_github(tmp_path: Path) -> None:
     assert config.awtrix_url == "http://awtrix.local"
     assert config.awtrix_app_name == DEFAULT_AWTRIX_APP_NAME
     assert config.awtrix_app_duration == DEFAULT_AWTRIX_APP_DURATION
+    assert config.color_mode == "github"
 
 
 @pytest.mark.parametrize("duration", ["nope", "0", "-1"])
