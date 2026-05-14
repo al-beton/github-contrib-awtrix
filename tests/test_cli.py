@@ -24,6 +24,7 @@ def test_json_stdout(monkeypatch, capsys, sample_grid: ContributionGrid) -> None
     monkeypatch.setenv("GITHUB_TOKEN", "token")
     monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(cli.AwtrixClient, "push_grid", lambda *_, **__: None)
 
@@ -49,6 +50,7 @@ def test_json_file(monkeypatch, tmp_path: Path, sample_grid: ContributionGrid) -
     monkeypatch.setenv("GITHUB_TOKEN", "token")
     monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(cli.AwtrixClient, "push_grid", lambda *_, **__: None)
 
@@ -64,6 +66,7 @@ def test_png_file(monkeypatch, tmp_path: Path, sample_grid: ContributionGrid) ->
     monkeypatch.setenv("GITHUB_TOKEN", "token")
     monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(cli.AwtrixClient, "push_grid", lambda *_, **__: None)
 
@@ -83,6 +86,7 @@ def test_install_uses_awtrix_only_config(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_LOGIN", raising=False)
     monkeypatch.delenv("AWTRIX_APP_NAME", raising=False)
+    monkeypatch.delenv("AWTRIX_APP_DURATION", raising=False)
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setattr(
         cli.AwtrixClient,
@@ -103,6 +107,7 @@ def test_uninstall_uses_awtrix_only_config(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     monkeypatch.delenv("GITHUB_LOGIN", raising=False)
     monkeypatch.delenv("AWTRIX_APP_NAME", raising=False)
+    monkeypatch.delenv("AWTRIX_APP_DURATION", raising=False)
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setattr(
         cli.AwtrixClient,
@@ -125,6 +130,7 @@ def test_push_passes_awtrix_duration(
     monkeypatch.setenv("GITHUB_TOKEN", "token")
     monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(
         cli.AwtrixClient,
@@ -146,6 +152,7 @@ def test_push_failure_keeps_prior_outputs(
     monkeypatch.setenv("GITHUB_TOKEN", "token")
     monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(
         cli.AwtrixClient,

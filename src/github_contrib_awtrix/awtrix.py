@@ -7,10 +7,11 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from github_contrib_awtrix.defaults import DEFAULT_AWTRIX_APP_DURATION
 from github_contrib_awtrix.grid import ContributionGrid
 from github_contrib_awtrix.render import FRAME_HEIGHT, FRAME_WIDTH, frame_colors
 
-DEFAULT_APP_DURATION_SECONDS = 7
+DEFAULT_APP_DURATION_SECONDS = DEFAULT_AWTRIX_APP_DURATION
 
 
 class AwtrixError(RuntimeError):

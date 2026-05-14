@@ -32,7 +32,7 @@ Overrides are command-specific and must appear after the subcommand:
 doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
-uninstall: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
+uninstall: --awtrix-url, --awtrix-app-name
 ```
 
 ## Command Shape

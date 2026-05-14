@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from github_contrib_awtrix.config import resolve_config
+from github_contrib_awtrix.defaults import (
+    DEFAULT_AWTRIX_APP_DURATION,
+    DEFAULT_AWTRIX_APP_NAME,
+)
 
 
 def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
@@ -66,5 +72,15 @@ def test_can_resolve_awtrix_without_github(tmp_path: Path) -> None:
     assert config.token is None
     assert config.login is None
     assert config.awtrix_url == "http://awtrix.local"
-    assert config.awtrix_app_name == "github_contribution_graph"
-    assert config.awtrix_app_duration == 7
+    assert config.awtrix_app_name == DEFAULT_AWTRIX_APP_NAME
+    assert config.awtrix_app_duration == DEFAULT_AWTRIX_APP_DURATION
+
+
+@pytest.mark.parametrize("duration", ["nope", "0", "-1"])
+def test_invalid_awtrix_duration_fails(duration: str) -> None:
+    with pytest.raises(ValueError, match="AWTRIX_APP_DURATION"):
+        resolve_config(
+            require_github=False,
+            awtrix_app_duration=duration,
+            environ={},
+        )

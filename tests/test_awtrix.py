@@ -25,6 +25,32 @@ def test_grid_payload_draws_32_by_8_frame(sample_grid: ContributionGrid) -> None
     assert command[4][-32:] == [0] * 32
 
 
+def test_install_app_posts_placeholder_payload(monkeypatch) -> None:
+    payloads = []
+
+    monkeypatch.setattr(
+        AwtrixClient,
+        "update_app",
+        lambda _, app_name, payload: payloads.append((app_name, payload)),
+    )
+
+    AwtrixClient("http://awtrix.local").install_app("github", duration_seconds=13)
+
+    assert payloads == [
+        (
+            "github",
+            {
+                "text": "GitHub ready",
+                "center": True,
+                "noScroll": True,
+                "textCase": 2,
+                "duration": 13,
+                "save": False,
+            },
+        )
+    ]
+
+
 def test_update_app_posts_json_to_encoded_custom_app_name(monkeypatch) -> None:
     requests = []
 

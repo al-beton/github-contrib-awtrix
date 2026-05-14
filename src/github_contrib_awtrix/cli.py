@@ -35,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
         "uninstall",
         help="Remove the AWTRIX CustomApp page.",
     )
-    _add_awtrix_args(uninstall)
+    _add_awtrix_identity_args(uninstall)
 
     return parser
 
@@ -66,12 +66,16 @@ def _add_github_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_awtrix_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--awtrix-url", help="Override AWTRIX_URL.")
-    parser.add_argument("--awtrix-app-name", help="Override AWTRIX_APP_NAME.")
+    _add_awtrix_identity_args(parser)
     parser.add_argument(
         "--awtrix-app-duration",
         help="Override AWTRIX_APP_DURATION in seconds.",
     )
+
+
+def _add_awtrix_identity_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--awtrix-url", help="Override AWTRIX_URL.")
+    parser.add_argument("--awtrix-app-name", help="Override AWTRIX_APP_NAME.")
 
 
 def _add_common_config_args(parser: argparse.ArgumentParser) -> None:
@@ -168,7 +172,6 @@ def _uninstall(args: argparse.Namespace) -> None:
     config = resolve_config(
         awtrix_url=args.awtrix_url,
         awtrix_app_name=args.awtrix_app_name,
-        awtrix_app_duration=args.awtrix_app_duration,
         require_github=False,
         require_awtrix=True,
     )

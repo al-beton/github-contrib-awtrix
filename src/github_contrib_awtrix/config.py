@@ -4,14 +4,19 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from github_contrib_awtrix.defaults import (
+    DEFAULT_AWTRIX_APP_DURATION,
+    DEFAULT_AWTRIX_APP_NAME,
+)
+
 
 @dataclass(frozen=True)
 class Config:
     token: str | None
     login: str | None
     awtrix_url: str | None = None
-    awtrix_app_name: str = "github_contribution_graph"
-    awtrix_app_duration: int = 7
+    awtrix_app_name: str = DEFAULT_AWTRIX_APP_NAME
+    awtrix_app_duration: int = DEFAULT_AWTRIX_APP_DURATION
 
 
 def load_dotenv(path: Path = Path(".env")) -> dict[str, str]:
@@ -52,13 +57,13 @@ def resolve_config(
         awtrix_app_name
         or env.get("AWTRIX_APP_NAME")
         or dotenv.get("AWTRIX_APP_NAME")
-        or "github_contribution_graph"
+        or DEFAULT_AWTRIX_APP_NAME
     )
     resolved_awtrix_app_duration = _parse_positive_int(
         awtrix_app_duration
         or env.get("AWTRIX_APP_DURATION")
         or dotenv.get("AWTRIX_APP_DURATION")
-        or "7",
+        or str(DEFAULT_AWTRIX_APP_DURATION),
         "AWTRIX_APP_DURATION",
     )
 
