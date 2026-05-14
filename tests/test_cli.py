@@ -206,7 +206,7 @@ def test_push_passes_color_mode_to_awtrix(
         lambda *_, color_mode, **__: pushed.append(color_mode),
     )
 
-    exit_code = cli.main(["push", "--color-mode", "matrix"])
+    exit_code = cli.main(["push", "--color-mode", "purple"])
 
     assert exit_code == 0
-    assert pushed == ["matrix"]
+    assert pushed == ["purple"]

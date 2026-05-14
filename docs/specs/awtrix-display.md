@@ -17,8 +17,11 @@ Render the GitHub contribution grid as a 32 x 8 frame.
 ## Color Modes
 
 - `github`: GitHub's returned colors
-- `dark`: black empty cells with GitHub-style dark greens
+- `dark`: black empty cells with faint-to-bright GitHub-style greens
 - `matrix`: black empty cells with brighter matrix greens
+- `intense`: black empty cells with a hotter green/yellow-green scale
+- `purple`: black empty cells with a purple scale
+- `yellow`: black empty cells with an amber/yellow scale
 
 `GITHUB_CONTRIB_COLOR_MODE` sets the default.
 

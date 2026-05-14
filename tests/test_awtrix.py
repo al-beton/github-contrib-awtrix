@@ -26,11 +26,11 @@ def test_grid_payload_draws_32_by_8_frame(sample_grid: ContributionGrid) -> None
 
 
 def test_grid_payload_uses_selected_color_mode(sample_grid: ContributionGrid) -> None:
-    payload = grid_payload(sample_grid, color_mode="matrix")
+    payload = grid_payload(sample_grid, color_mode="purple")
 
     pixels = payload["draw"][0]["db"][4]
     assert pixels[0] == 0x000000
-    assert pixels[1] == 0x003B18
+    assert pixels[1] == 0x1A0033
 
 
 def test_install_app_posts_placeholder_payload(monkeypatch) -> None:
