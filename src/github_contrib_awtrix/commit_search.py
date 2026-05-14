@@ -37,12 +37,14 @@ def fetch_commit_search_grid(
     current_time = _current_time(now)
     today = current_time.date()
     start = visible_window_start(today)
+    query_start = start - timedelta(days=1)
+    query_end = today + timedelta(days=1)
 
     nodes = _search_commits(
         token=token,
         author_email=author_email,
-        start=start,
-        end=today,
+        start=query_start,
+        end=query_end,
         org=org,
         repo=repo,
     )
@@ -68,7 +70,15 @@ def parse_org(org: str) -> str:
 
 def parse_repo(repo: str) -> tuple[str, str]:
     owner, separator, name = repo.partition("/")
-    if not owner or separator != "/" or not name or "/" in name:
+    if (
+        repo.strip() != repo
+        or not owner
+        or separator != "/"
+        or not name
+        or "/" in name
+        or owner.strip() != owner
+        or name.strip() != name
+    ):
         raise ValueError("repo must be in OWNER/REPO form")
     return owner, name
 
@@ -110,7 +120,7 @@ def build_commit_search_grid(
     current_time = _current_time(now)
     today = current_time.date()
     start = visible_window_start(today)
-    counts = Counter(commit_dates)
+    counts = Counter(day for day in commit_dates if start <= day <= today)
     max_count = max(counts.values(), default=0)
 
     weeks: list[list[ContributionDay]] = []

@@ -101,6 +101,27 @@ def test_build_commit_search_grid_handles_empty_matches() -> None:
     assert {day.contribution_level for week in grid.weeks for day in week} == {"NONE"}
 
 
+def test_build_commit_search_grid_ignores_dates_outside_visible_window() -> None:
+    grid = commit_search.build_commit_search_grid(
+        author_email="bot@example.com",
+        commit_dates=[
+            date(2025, 10, 4),
+            date(2025, 10, 4),
+            date(2025, 10, 5),
+            date(2026, 5, 15),
+            date(2026, 5, 15),
+        ],
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+
+    days = {day.date: day for week in grid.weeks for day in week}
+
+    assert days["2025-10-05"].contribution_count == 1
+    assert days["2025-10-05"].contribution_level == "FOURTH_QUARTILE"
+    assert "2025-10-04" not in days
+    assert days["2026-05-15"].contribution_count == 0
+
+
 def test_matching_author_dates_uses_exact_email_and_local_date() -> None:
     dates = commit_search.matching_author_dates(
         [
@@ -189,8 +210,8 @@ def test_fetch_commit_search_grid_filters_author_email_and_pages(monkeypatch) ->
         "token",
         (
             "author-email:bot@example.com "
-            "author-date:>=2025-10-05 "
-            "author-date:<=2026-05-14"
+            "author-date:>=2025-10-04 "
+            "author-date:<=2026-05-15"
         ),
         1,
     )
@@ -216,8 +237,8 @@ def test_fetch_commit_search_grid_can_narrow_to_repo(monkeypatch) -> None:
     assert queries == [
         (
             "author-email:bot@example.com "
-            "author-date:>=2025-10-05 "
-            "author-date:<=2026-05-14 "
+            "author-date:>=2025-10-04 "
+            "author-date:<=2026-05-15 "
             "repo:owner/repo"
         )
     ]
@@ -242,8 +263,8 @@ def test_fetch_commit_search_grid_can_narrow_to_org(monkeypatch) -> None:
     assert queries == [
         (
             "author-email:bot@example.com "
-            "author-date:>=2025-10-05 "
-            "author-date:<=2026-05-14 "
+            "author-date:>=2025-10-04 "
+            "author-date:<=2026-05-15 "
             "org:owner"
         )
     ]
@@ -268,6 +289,16 @@ def test_parse_org_rejects_invalid_value() -> None:
 def test_parse_repo_rejects_invalid_value() -> None:
     with pytest.raises(ValueError, match="OWNER/REPO"):
         commit_search.parse_repo("owner/repo/extra")
+
+
+def test_parse_repo_rejects_surrounding_whitespace() -> None:
+    with pytest.raises(ValueError, match="OWNER/REPO"):
+        commit_search.parse_repo(" owner/repo ")
+
+
+def test_parse_repo_rejects_component_whitespace() -> None:
+    with pytest.raises(ValueError, match="OWNER/REPO"):
+        commit_search.parse_repo("owner /repo")
 
 
 def test_fetch_commit_search_grid_errors_on_incomplete_results(monkeypatch) -> None:
