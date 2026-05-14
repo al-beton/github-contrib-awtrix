@@ -34,14 +34,35 @@ Render the GitHub contribution grid as a 32 x 8 frame.
 
 ### AWTRIX
 
-`--push` sends the 32 x 8 frame to AWTRIX over the local HTTP API.
+AWTRIX CustomApps are named pages in the app rotation. They do not run code on
+the device.
 
-`AWTRIX_URL` is required for `--push`.
+`install` creates the page by posting a placeholder payload to:
+
+```text
+/api/custom?name=github_contribution_graph
+```
+
+`push` updates the same page with drawing instructions for the current 32 x 8
+frame.
+
+`uninstall` removes the page by sending an empty payload to the same endpoint.
+
+`AWTRIX_URL` is required for `doctor`, `install`, `push`, and `uninstall`.
 
 `--awtrix-url` may override `AWTRIX_URL`.
 
-Push happens after JSON, terminal, and PNG outputs. If AWTRIX is unreachable,
-the command exits non-zero and prior outputs remain.
+`--awtrix-app-name` may override `AWTRIX_APP_NAME`.
+
+`AWTRIX_APP_DURATION` controls the app duration in seconds. It defaults to `7`.
+
+`--awtrix-app-duration` may override `AWTRIX_APP_DURATION`.
+
+The CLI does not save the app to flash by default. A scheduled `push` recreates
+or refreshes the page when needed.
+
+Push happens after JSON, terminal, and PNG outputs. If AWTRIX is unreachable, the
+command exits non-zero and prior outputs remain.
 
 ## Out Of Scope For V1
 
