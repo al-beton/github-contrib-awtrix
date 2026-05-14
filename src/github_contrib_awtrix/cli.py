@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections.abc import Sequence
+from pathlib import Path
+
+from github_contrib_awtrix.config import resolve_config
+from github_contrib_awtrix.github import GitHubError, fetch_contribution_grid
+from github_contrib_awtrix.render import render_terminal, write_png
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -45,7 +51,36 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return 0
 
-    parser.error("outputs are specified in the spec but not implemented yet")
+    try:
+        config = resolve_config(
+            token=args.token,
+            login=args.login,
+            awtrix_url=args.awtrix_url,
+        )
+        grid = fetch_contribution_grid(token=config.token, login=config.login)
+
+        if args.json:
+            json_output = json.dumps(grid.to_json(), indent=2)
+            if args.json == "-":
+                print(json_output)
+            else:
+                json_path = Path(args.json)
+                json_path.parent.mkdir(parents=True, exist_ok=True)
+                json_path.write_text(f"{json_output}\n")
+
+        if args.terminal:
+            print(render_terminal(grid))
+
+        if args.png:
+            write_png(grid, Path(args.png))
+
+        if args.push:
+            parser.error("--push is specified in the spec but not implemented yet")
+
+    except (GitHubError, OSError, ValueError) as exc:
+        parser.exit(1, f"{parser.prog}: error: {exc}\n")
+
+    return 0
 
 
 if __name__ == "__main__":
