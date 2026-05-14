@@ -135,7 +135,7 @@ def test_push_passes_awtrix_duration(
     monkeypatch.setattr(
         cli.AwtrixClient,
         "push_grid",
-        lambda *_, duration_seconds: durations.append(duration_seconds),
+        lambda *_, duration_seconds, **__: durations.append(duration_seconds),
     )
 
     exit_code = cli.main(["push", "--awtrix-app-duration", "12"])
@@ -188,3 +188,25 @@ def test_doctor_checks_github_and_awtrix(monkeypatch, capsys) -> None:
     assert exit_code == 0
     assert "GitHub OK for al-beton" in captured.out
     assert "AWTRIX OK at http://awtrix.local" in captured.out
+
+
+def test_push_passes_color_mode_to_awtrix(
+    monkeypatch,
+    sample_grid: ContributionGrid,
+) -> None:
+    pushed: list[str] = []
+
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
+    monkeypatch.setattr(
+        cli.AwtrixClient,
+        "push_grid",
+        lambda *_, color_mode, **__: pushed.append(color_mode),
+    )
+
+    exit_code = cli.main(["push", "--color-mode", "matrix"])
+
+    assert exit_code == 0
+    assert pushed == ["matrix"]

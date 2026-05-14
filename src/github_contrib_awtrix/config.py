@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from github_contrib_awtrix.colors import ColorMode, normalize_color_mode
 from github_contrib_awtrix.defaults import (
     DEFAULT_AWTRIX_APP_DURATION,
     DEFAULT_AWTRIX_APP_NAME,
@@ -17,6 +18,7 @@ class Config:
     awtrix_url: str | None = None
     awtrix_app_name: str = DEFAULT_AWTRIX_APP_NAME
     awtrix_app_duration: int = DEFAULT_AWTRIX_APP_DURATION
+    color_mode: ColorMode = "github"
 
 
 def load_dotenv(path: Path = Path(".env")) -> dict[str, str]:
@@ -40,6 +42,7 @@ def resolve_config(
     awtrix_url: str | None = None,
     awtrix_app_name: str | None = None,
     awtrix_app_duration: str | None = None,
+    color_mode: str | None = None,
     require_github: bool = True,
     require_awtrix: bool = False,
     env_file: Path = Path(".env"),
@@ -66,6 +69,12 @@ def resolve_config(
         or str(DEFAULT_AWTRIX_APP_DURATION),
         "AWTRIX_APP_DURATION",
     )
+    resolved_color_mode = normalize_color_mode(
+        color_mode
+        or env.get("GITHUB_CONTRIB_COLOR_MODE")
+        or dotenv.get("GITHUB_CONTRIB_COLOR_MODE")
+        or "github"
+    )
 
     required_values: list[tuple[str, str | None]] = []
     if require_github:
@@ -89,6 +98,7 @@ def resolve_config(
         awtrix_url=resolved_awtrix_url,
         awtrix_app_name=resolved_awtrix_app_name,
         awtrix_app_duration=resolved_awtrix_app_duration,
+        color_mode=resolved_color_mode,
     )
 
 

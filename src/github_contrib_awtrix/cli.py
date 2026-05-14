@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from github_contrib_awtrix.awtrix import AwtrixClient, AwtrixError
+from github_contrib_awtrix.colors import COLOR_MODES, ColorMode
 from github_contrib_awtrix.config import resolve_config
 from github_contrib_awtrix.github import GitHubError, fetch_contribution_grid
 from github_contrib_awtrix.grid import ContributionGrid
@@ -57,6 +58,11 @@ def _add_output_args(parser: argparse.ArgumentParser) -> None:
         "--png",
         metavar="PATH",
         help="Write a 32 x 8 PNG preview at 10x scale.",
+    )
+    parser.add_argument(
+        "--color-mode",
+        choices=COLOR_MODES,
+        help="Palette for terminal, PNG, and AWTRIX output.",
     )
 
 
@@ -153,17 +159,19 @@ def _push(args: argparse.Namespace) -> None:
         awtrix_url=args.awtrix_url,
         awtrix_app_name=args.awtrix_app_name,
         awtrix_app_duration=args.awtrix_app_duration,
+        color_mode=args.color_mode,
         require_awtrix=True,
     )
     if config.token is None or config.login is None or config.awtrix_url is None:
         raise ValueError("missing required config")
 
     grid = fetch_contribution_grid(token=config.token, login=config.login)
-    _write_outputs(args, grid)
+    _write_outputs(args, grid, color_mode=config.color_mode)
     AwtrixClient(config.awtrix_url).push_grid(
         config.awtrix_app_name,
         grid,
         duration_seconds=config.awtrix_app_duration,
+        color_mode=config.color_mode,
     )
     print(f"Pushed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
@@ -182,7 +190,12 @@ def _uninstall(args: argparse.Namespace) -> None:
     print(f"Removed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
 
-def _write_outputs(args: argparse.Namespace, grid: ContributionGrid) -> None:
+def _write_outputs(
+    args: argparse.Namespace,
+    grid: ContributionGrid,
+    *,
+    color_mode: ColorMode,
+) -> None:
     if args.json:
         json_output = json.dumps(grid.to_json(), indent=2)
         if args.json == "-":
@@ -193,10 +206,10 @@ def _write_outputs(args: argparse.Namespace, grid: ContributionGrid) -> None:
             json_path.write_text(f"{json_output}\n")
 
     if args.terminal:
-        print(render_terminal(grid))
+        print(render_terminal(grid, color_mode=color_mode))
 
     if args.png:
-        write_png(grid, Path(args.png))
+        write_png(grid, Path(args.png), color_mode=color_mode)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from github_contrib_awtrix.colors import ColorMode
 from github_contrib_awtrix.defaults import DEFAULT_AWTRIX_APP_DURATION
 from github_contrib_awtrix.grid import ContributionGrid
 from github_contrib_awtrix.render import FRAME_HEIGHT, FRAME_WIDTH, frame_colors
@@ -47,8 +48,16 @@ class AwtrixClient:
         grid: ContributionGrid,
         *,
         duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
+        color_mode: ColorMode = "github",
     ) -> None:
-        self.update_app(app_name, grid_payload(grid, duration_seconds=duration_seconds))
+        self.update_app(
+            app_name,
+            grid_payload(
+                grid,
+                duration_seconds=duration_seconds,
+                color_mode=color_mode,
+            ),
+        )
 
     def update_app(self, app_name: str, payload: dict[str, Any]) -> None:
         path = f"/api/custom?{urlencode({'name': app_name})}"
@@ -98,6 +107,7 @@ def grid_payload(
     grid: ContributionGrid,
     *,
     duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
+    color_mode: ColorMode = "github",
 ) -> dict[str, Any]:
     return {
         "draw": [
@@ -109,7 +119,7 @@ def grid_payload(
                     FRAME_HEIGHT,
                     [
                         _hex_to_rgb888(color)
-                        for row in frame_colors(grid)
+                        for row in frame_colors(grid, color_mode=color_mode)
                         for color in row
                     ],
                 ]
