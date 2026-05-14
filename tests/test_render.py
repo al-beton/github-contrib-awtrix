@@ -27,11 +27,11 @@ def test_png_render_is_32_by_8_at_10x(
         assert image.size == (320, 80)
 
 
-def test_dark_color_mode_uses_black_empty_cells(sample_grid: ContributionGrid) -> None:
-    colors = frame_colors(sample_grid, color_mode="dark")
+def test_green_color_mode_uses_black_empty_cells(sample_grid: ContributionGrid) -> None:
+    colors = frame_colors(sample_grid, color_mode="green")
 
     assert colors[0][0] == "#000000"
-    assert colors[0][1] == "#002b12"
+    assert colors[0][1] == "#00240f"
     assert colors[-1] == ["#000000"] * 32
 
 
@@ -56,24 +56,24 @@ def test_display_color_modes_have_distinct_scales(
         )
     ]
 
-    assert [contribution_color(day, "intense") for day in days] == [
+    assert [contribution_color(day, "green") for day in days] == [
         "#000000",
-        "#001f0c",
-        "#00a83b",
-        "#39ff14",
-        "#b6ff00",
+        "#00240f",
+        "#007a2f",
+        "#30d158",
+        "#ffffff",
     ]
     assert [contribution_color(day, "purple") for day in days] == [
         "#000000",
         "#1a0033",
-        "#4c148c",
-        "#9b4dff",
-        "#e0b3ff",
+        "#6d28d9",
+        "#c084fc",
+        "#ffffff",
     ]
     assert [contribution_color(day, "yellow") for day in days] == [
         "#000000",
         "#2b1800",
-        "#7a4300",
-        "#ffb000",
-        "#fff36a",
+        "#9a5b00",
+        "#ffd60a",
+        "#ffffff",
     ]

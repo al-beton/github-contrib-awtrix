@@ -4,23 +4,22 @@ from typing import Literal
 
 from github_contrib_awtrix.grid import ContributionDay
 
-ColorMode = Literal["github", "dark", "matrix", "intense", "purple", "yellow"]
+ColorMode = Literal["github", "matrix", "green", "purple", "yellow"]
 
 COLOR_MODES: tuple[ColorMode, ...] = (
     "github",
-    "dark",
     "matrix",
-    "intense",
+    "green",
     "purple",
     "yellow",
 )
 
-_DARK_PALETTE = {
+_GREEN_PALETTE = {
     "NONE": "#000000",
-    "FIRST_QUARTILE": "#002b12",
-    "SECOND_QUARTILE": "#005f2a",
-    "THIRD_QUARTILE": "#1f9d45",
-    "FOURTH_QUARTILE": "#39d353",
+    "FIRST_QUARTILE": "#00240f",
+    "SECOND_QUARTILE": "#007a2f",
+    "THIRD_QUARTILE": "#30d158",
+    "FOURTH_QUARTILE": "#ffffff",
 }
 
 _MATRIX_PALETTE = {
@@ -31,34 +30,25 @@ _MATRIX_PALETTE = {
     "FOURTH_QUARTILE": "#7cff6b",
 }
 
-_INTENSE_PALETTE = {
-    "NONE": "#000000",
-    "FIRST_QUARTILE": "#001f0c",
-    "SECOND_QUARTILE": "#00a83b",
-    "THIRD_QUARTILE": "#39ff14",
-    "FOURTH_QUARTILE": "#b6ff00",
-}
-
 _PURPLE_PALETTE = {
     "NONE": "#000000",
     "FIRST_QUARTILE": "#1a0033",
-    "SECOND_QUARTILE": "#4c148c",
-    "THIRD_QUARTILE": "#9b4dff",
-    "FOURTH_QUARTILE": "#e0b3ff",
+    "SECOND_QUARTILE": "#6d28d9",
+    "THIRD_QUARTILE": "#c084fc",
+    "FOURTH_QUARTILE": "#ffffff",
 }
 
 _YELLOW_PALETTE = {
     "NONE": "#000000",
     "FIRST_QUARTILE": "#2b1800",
-    "SECOND_QUARTILE": "#7a4300",
-    "THIRD_QUARTILE": "#ffb000",
-    "FOURTH_QUARTILE": "#fff36a",
+    "SECOND_QUARTILE": "#9a5b00",
+    "THIRD_QUARTILE": "#ffd60a",
+    "FOURTH_QUARTILE": "#ffffff",
 }
 
 _PALETTES = {
-    "dark": _DARK_PALETTE,
+    "green": _GREEN_PALETTE,
     "matrix": _MATRIX_PALETTE,
-    "intense": _INTENSE_PALETTE,
     "purple": _PURPLE_PALETTE,
     "yellow": _YELLOW_PALETTE,
 }
@@ -67,12 +57,10 @@ _PALETTES = {
 def normalize_color_mode(value: str) -> ColorMode:
     if value == "github":
         return "github"
-    if value == "dark":
-        return "dark"
     if value == "matrix":
         return "matrix"
-    if value == "intense":
-        return "intense"
+    if value == "green":
+        return "green"
     if value == "purple":
         return "purple"
     if value == "yellow":

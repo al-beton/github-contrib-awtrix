@@ -44,7 +44,7 @@ No command prints help and does nothing.
 github-contrib-awtrix doctor
 github-contrib-awtrix install
 github-contrib-awtrix push \
-  --color-mode dark \
+  --color-mode green \
   --json out/grid.json \
   --terminal \
   --png out/preview.png
@@ -60,11 +60,10 @@ updates that page with the current contribution grid.
 Color modes:
 
 - `github`: GitHub's returned colors
-- `dark`: black empty cells with faint-to-bright GitHub-style greens
 - `matrix`: black empty cells with brighter matrix greens
-- `intense`: black empty cells with a hotter green/yellow-green scale
-- `purple`: black empty cells with a purple scale
-- `yellow`: black empty cells with an amber/yellow scale
+- `green`: black empty cells with a green-to-white scale
+- `purple`: black empty cells with a purple-to-white scale
+- `yellow`: black empty cells with an amber/yellow-to-white scale
 
 ## Outputs
 
