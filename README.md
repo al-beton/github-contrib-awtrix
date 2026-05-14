@@ -7,10 +7,10 @@ with cron/launchd later.
 
 ## V1
 
-- one GitHub login, or one exact commit author email
+- one GitHub login, one exact commit author email, one org, or one repo
 - last 32 weeks ending today, using the local machine date
 - GitHub GraphQL contribution calendar as the data source
-- GitHub commit search as the bot/agent commit data source
+- GitHub commit search as the commit activity data source
 - 32 x 8 visual frame for terminal, PNG, and AWTRIX output
 - blank/off eighth row
 
@@ -57,7 +57,6 @@ github-contrib-awtrix push \
 github-contrib-awtrix push \
   --source commit-search \
   --org OWNER \
-  --author-email bot@example.com \
   --color-mode purple
 github-contrib-awtrix uninstall
 ```
@@ -71,10 +70,12 @@ updates that page with the current contribution grid.
 Sources:
 
 - `profile`: the default; uses `GITHUB_LOGIN` and GitHub's profile contribution calendar
-- `commit-search`: uses `--author-email EMAIL` to count matching primary commit authors across commits visible to the token
+- `commit-search`: counts commits visible to the token using at least one of `--author-email`, `--org`, or `--repo`
 
-`commit-search` can be narrowed with `--org OWNER` or `--repo OWNER/REPO`, but
-both are optional. `--org` and `--repo` cannot be used together.
+`commit-search` can count a whole visible org with `--org OWNER`, one repo with
+`--repo OWNER/REPO`, one author with `--author-email EMAIL`, or an author inside
+an org/repo by combining `--author-email` with one scope. `--org` and `--repo`
+cannot be used together.
 
 `commit-search` is a commit activity calendar. It is not GitHub's profile
 contribution calendar and does not include co-authors, PR authorship, other
