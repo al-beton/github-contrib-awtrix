@@ -2,13 +2,15 @@
 
 ## Purpose
 
-Fetch one GitHub login's contribution calendar and turn it into 32 weeks of
-grid data.
+Fetch GitHub activity and turn it into 32 weeks of grid data.
 
 ## Inputs
 
 - `GITHUB_TOKEN`
-- `GITHUB_LOGIN`
+- `GITHUB_LOGIN` for profile mode
+- `--author-email EMAIL` for commit-search mode
+- optional `--org OWNER` narrowing for commit-search mode
+- optional `--repo OWNER/REPO` narrowing for commit-search mode
 - local machine date
 
 CLI flags may override `.env` values.
@@ -17,10 +19,14 @@ Overrides:
 
 - `--token`
 - `--login`
+- `--source`
+- `--org`
+- `--repo`
+- `--author-email`
 
 ## Source Of Truth
 
-Use GitHub GraphQL's contribution calendar.
+Profile mode uses GitHub GraphQL's contribution calendar.
 
 Use GitHub's returned week/day structure and day fields:
 
@@ -30,13 +36,21 @@ Use GitHub's returned week/day structure and day fields:
 - `contributionLevel`
 - `color`
 
-Do not compute custom colors in v1.
+Commit-search mode uses GitHub commit search. It counts commits visible to the
+token whose primary author email exactly matches `--author-email`.
+
+Commit-search mode may add `org:OWNER` or `repo:OWNER/REPO` to the search query.
+Those filters are optional and mutually exclusive.
+
+Commit-search mode computes contribution levels from the visible window so it can
+reuse the same renderers as profile mode.
 
 ## Window
 
 - request the last 32 weeks ending today
 - "today" means the local machine date
-- use GitHub's returned week columns and day rows
+- profile mode uses GitHub's returned week columns and day rows
+- commit-search mode uses GitHub-style Sunday-start week columns
 
 ## JSON Output
 
@@ -65,7 +79,8 @@ Each cell includes:
 ## Out Of Scope For V1
 
 - teams
-- org aggregation
-- custom intensity mapping
+- org-wide mode without a commit author identity
+- co-author counting
+- search result sets larger than GitHub's commit search cap
 - GitHub webhooks
 - OAuth
