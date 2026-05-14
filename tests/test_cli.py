@@ -68,14 +68,13 @@ def test_png_file(monkeypatch, tmp_path: Path, sample_grid: ContributionGrid) ->
         assert image.size == (320, 80)
 
 
-def test_push_remains_unimplemented(
-    monkeypatch,
-    capsys,
-    sample_grid: ContributionGrid,
-) -> None:
-    monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
-    monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
+def test_push_only_fails_before_fetching(monkeypatch, capsys) -> None:
+    def fail_fetch(**_) -> ContributionGrid:
+        raise AssertionError("push-only should not fetch GitHub data")
+
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setattr(cli, "fetch_contribution_grid", fail_fetch)
 
     with pytest.raises(SystemExit) as exc_info:
         cli.main(["--push"])
