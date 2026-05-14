@@ -54,6 +54,10 @@ frame.
 
 `--awtrix-app-name` may override `AWTRIX_APP_NAME`.
 
+`AWTRIX_APP_DURATION` controls the app duration in seconds. It defaults to `7`.
+
+`--awtrix-app-duration` may override `AWTRIX_APP_DURATION`.
+
 The CLI does not save the app to flash by default. A scheduled `push` recreates
 or refreshes the page when needed.
 

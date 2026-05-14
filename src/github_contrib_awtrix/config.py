@@ -11,6 +11,7 @@ class Config:
     login: str | None
     awtrix_url: str | None = None
     awtrix_app_name: str = "github_contribution_graph"
+    awtrix_app_duration: int = 7
 
 
 def load_dotenv(path: Path = Path(".env")) -> dict[str, str]:
@@ -33,6 +34,7 @@ def resolve_config(
     login: str | None = None,
     awtrix_url: str | None = None,
     awtrix_app_name: str | None = None,
+    awtrix_app_duration: str | None = None,
     require_github: bool = True,
     require_awtrix: bool = False,
     env_file: Path = Path(".env"),
@@ -51,6 +53,13 @@ def resolve_config(
         or env.get("AWTRIX_APP_NAME")
         or dotenv.get("AWTRIX_APP_NAME")
         or "github_contribution_graph"
+    )
+    resolved_awtrix_app_duration = _parse_positive_int(
+        awtrix_app_duration
+        or env.get("AWTRIX_APP_DURATION")
+        or dotenv.get("AWTRIX_APP_DURATION")
+        or "7",
+        "AWTRIX_APP_DURATION",
     )
 
     required_values: list[tuple[str, str | None]] = []
@@ -74,4 +83,15 @@ def resolve_config(
         login=resolved_login,
         awtrix_url=resolved_awtrix_url,
         awtrix_app_name=resolved_awtrix_app_name,
+        awtrix_app_duration=resolved_awtrix_app_duration,
     )
+
+
+def _parse_positive_int(value: str, name: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a positive integer") from exc
+    if parsed <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return parsed

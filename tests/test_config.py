@@ -14,6 +14,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
                 "GITHUB_LOGIN=dotenv-login",
                 "AWTRIX_URL=http://dotenv-awtrix.local",
                 "AWTRIX_APP_NAME=dotenv-app",
+                "AWTRIX_APP_DURATION=9",
             ]
         )
     )
@@ -23,6 +24,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
         login="cli-login",
         awtrix_url="http://cli-awtrix.local",
         awtrix_app_name="cli-app",
+        awtrix_app_duration="12",
         env_file=env_file,
         environ={},
     )
@@ -31,6 +33,7 @@ def test_cli_flags_override_dotenv(tmp_path: Path) -> None:
     assert config.login == "cli-login"
     assert config.awtrix_url == "http://cli-awtrix.local"
     assert config.awtrix_app_name == "cli-app"
+    assert config.awtrix_app_duration == 12
 
 
 def test_environment_overrides_dotenv(tmp_path: Path) -> None:
@@ -64,3 +67,4 @@ def test_can_resolve_awtrix_without_github(tmp_path: Path) -> None:
     assert config.login is None
     assert config.awtrix_url == "http://awtrix.local"
     assert config.awtrix_app_name == "github_contribution_graph"
+    assert config.awtrix_app_duration == 7

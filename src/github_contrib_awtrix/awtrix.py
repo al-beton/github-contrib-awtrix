@@ -10,6 +10,8 @@ from urllib.request import Request, urlopen
 from github_contrib_awtrix.grid import ContributionGrid
 from github_contrib_awtrix.render import FRAME_HEIGHT, FRAME_WIDTH, frame_colors
 
+DEFAULT_APP_DURATION_SECONDS = 7
+
 
 class AwtrixError(RuntimeError):
     pass
@@ -22,18 +24,30 @@ class AwtrixClient:
     def get_stats(self) -> dict[str, Any]:
         return self._request_json("GET", "/api/stats")
 
-    def install_app(self, app_name: str) -> None:
+    def install_app(
+        self,
+        app_name: str,
+        *,
+        duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
+    ) -> None:
         payload = {
             "text": "GitHub ready",
             "center": True,
             "noScroll": True,
             "textCase": 2,
+            "duration": duration_seconds,
             "save": False,
         }
         self.update_app(app_name, payload)
 
-    def push_grid(self, app_name: str, grid: ContributionGrid) -> None:
-        self.update_app(app_name, grid_payload(grid))
+    def push_grid(
+        self,
+        app_name: str,
+        grid: ContributionGrid,
+        *,
+        duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
+    ) -> None:
+        self.update_app(app_name, grid_payload(grid, duration_seconds=duration_seconds))
 
     def update_app(self, app_name: str, payload: dict[str, Any]) -> None:
         path = f"/api/custom?{urlencode({'name': app_name})}"
@@ -58,9 +72,15 @@ class AwtrixClient:
             with urlopen(request, timeout=10) as response:
                 raw = response.read().decode()
         except HTTPError as exc:
-            raise AwtrixError(f"AWTRIX request failed: HTTP {exc.code}") from exc
+            detail = _read_error_detail(exc)
+            message = f"AWTRIX request failed: {method} {path} HTTP {exc.code}"
+            if detail:
+                message = f"{message}: {detail}"
+            raise AwtrixError(message) from exc
         except URLError as exc:
-            raise AwtrixError(f"AWTRIX request failed: {exc.reason}") from exc
+            raise AwtrixError(
+                f"AWTRIX request failed: {method} {path}: {exc.reason}"
+            ) from exc
 
         if not raw:
             return {}
@@ -73,7 +93,11 @@ class AwtrixClient:
         return {"response": parsed}
 
 
-def grid_payload(grid: ContributionGrid) -> dict[str, Any]:
+def grid_payload(
+    grid: ContributionGrid,
+    *,
+    duration_seconds: int = DEFAULT_APP_DURATION_SECONDS,
+) -> dict[str, Any]:
     return {
         "draw": [
             {
@@ -90,10 +114,16 @@ def grid_payload(grid: ContributionGrid) -> dict[str, Any]:
                 ]
             }
         ],
-        "duration": 7,
+        "duration": duration_seconds,
         "noScroll": True,
         "save": False,
     }
+
+
+def _read_error_detail(exc: HTTPError) -> str:
+    if exc.fp is None:
+        return ""
+    return exc.fp.read().decode(errors="replace").strip()
 
 
 def _hex_to_rgb888(color: str) -> int:

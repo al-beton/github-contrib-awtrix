@@ -9,6 +9,7 @@ from pathlib import Path
 from github_contrib_awtrix.awtrix import AwtrixClient, AwtrixError
 from github_contrib_awtrix.config import resolve_config
 from github_contrib_awtrix.github import GitHubError, fetch_contribution_grid
+from github_contrib_awtrix.grid import ContributionGrid
 from github_contrib_awtrix.render import render_terminal, write_png
 
 
@@ -67,6 +68,10 @@ def _add_github_args(parser: argparse.ArgumentParser) -> None:
 def _add_awtrix_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--awtrix-url", help="Override AWTRIX_URL.")
     parser.add_argument("--awtrix-app-name", help="Override AWTRIX_APP_NAME.")
+    parser.add_argument(
+        "--awtrix-app-duration",
+        help="Override AWTRIX_APP_DURATION in seconds.",
+    )
 
 
 def _add_common_config_args(parser: argparse.ArgumentParser) -> None:
@@ -106,6 +111,7 @@ def _doctor(args: argparse.Namespace) -> None:
         login=args.login,
         awtrix_url=args.awtrix_url,
         awtrix_app_name=args.awtrix_app_name,
+        awtrix_app_duration=args.awtrix_app_duration,
         require_awtrix=True,
     )
     if config.token is None or config.login is None or config.awtrix_url is None:
@@ -122,13 +128,17 @@ def _install(args: argparse.Namespace) -> None:
     config = resolve_config(
         awtrix_url=args.awtrix_url,
         awtrix_app_name=args.awtrix_app_name,
+        awtrix_app_duration=args.awtrix_app_duration,
         require_github=False,
         require_awtrix=True,
     )
     if config.awtrix_url is None:
         raise ValueError("missing required config: AWTRIX_URL")
 
-    AwtrixClient(config.awtrix_url).install_app(config.awtrix_app_name)
+    AwtrixClient(config.awtrix_url).install_app(
+        config.awtrix_app_name,
+        duration_seconds=config.awtrix_app_duration,
+    )
     print(f"Installed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
 
@@ -138,6 +148,7 @@ def _push(args: argparse.Namespace) -> None:
         login=args.login,
         awtrix_url=args.awtrix_url,
         awtrix_app_name=args.awtrix_app_name,
+        awtrix_app_duration=args.awtrix_app_duration,
         require_awtrix=True,
     )
     if config.token is None or config.login is None or config.awtrix_url is None:
@@ -145,7 +156,11 @@ def _push(args: argparse.Namespace) -> None:
 
     grid = fetch_contribution_grid(token=config.token, login=config.login)
     _write_outputs(args, grid)
-    AwtrixClient(config.awtrix_url).push_grid(config.awtrix_app_name, grid)
+    AwtrixClient(config.awtrix_url).push_grid(
+        config.awtrix_app_name,
+        grid,
+        duration_seconds=config.awtrix_app_duration,
+    )
     print(f"Pushed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
 
@@ -153,6 +168,7 @@ def _uninstall(args: argparse.Namespace) -> None:
     config = resolve_config(
         awtrix_url=args.awtrix_url,
         awtrix_app_name=args.awtrix_app_name,
+        awtrix_app_duration=args.awtrix_app_duration,
         require_github=False,
         require_awtrix=True,
     )
@@ -163,7 +179,7 @@ def _uninstall(args: argparse.Namespace) -> None:
     print(f"Removed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
 
-def _write_outputs(args: argparse.Namespace, grid) -> None:
+def _write_outputs(args: argparse.Namespace, grid: ContributionGrid) -> None:
     if args.json:
         json_output = json.dumps(grid.to_json(), indent=2)
         if args.json == "-":

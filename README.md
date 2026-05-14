@@ -23,15 +23,16 @@ GITHUB_TOKEN=...
 GITHUB_LOGIN=al-beton
 AWTRIX_URL=http://awtrix_xxxxxx.local
 AWTRIX_APP_NAME=github_contribution_graph
+AWTRIX_APP_DURATION=7
 ```
 
-Overrides:
+Overrides are command-specific and must appear after the subcommand:
 
 ```text
---token
---login
---awtrix-url
---awtrix-app-name
+doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
+install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
+push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
+uninstall: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 ```
 
 ## Command Shape
@@ -56,11 +57,14 @@ updates that page with the current contribution grid.
 
 ## Outputs
 
-- `--json` writes 32 x 7 contribution data to stdout
-- `--json <path>` writes 32 x 7 contribution data to a file
-- `--terminal` prints a 32 x 8 ANSI color preview
-- `--png <path>` writes a 32 x 8 PNG preview at 10x scale; path is required
+- `push --json` writes 32 x 7 contribution data to stdout
+- `push --json <path>` writes 32 x 7 contribution data to a file
+- `push --terminal` prints a 32 x 8 ANSI color preview
+- `push --png <path>` writes a 32 x 8 PNG preview at 10x scale; path is required
 - `push` sends the 32 x 8 frame to AWTRIX over local HTTP
+
+The preview flags currently belong to `push`, so the command still requires
+`AWTRIX_URL` and updates the AWTRIX CustomApp after writing previews.
 
 Output order is:
 
