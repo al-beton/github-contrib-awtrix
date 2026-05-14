@@ -73,7 +73,8 @@ Velocity overlay:
 - enabled with `GITHUB_CONTRIB_VELOCITY=true` or `push --velocity`
 - disabled for a command with `push --no-velocity`
 - displays average commits per day over the visible real days
-- draws the compact value, such as `0.4/d`, `12/d`, or `1.2k/d`, over the bottom-left of the grid
+- draws the compact value, such as `0.4/d`, `12/d`, `1.2k/d`, or `1.2M/d`, over the bottom-left of the grid
+- promotes cleanly across large suffixes: `999/d`, `1k/d`, `999k/d`, `1M/d`, `1B/d`
 - applies to terminal, PNG, and AWTRIX output
 
 ## Outputs

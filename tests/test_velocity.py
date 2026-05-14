@@ -27,11 +27,17 @@ def test_format_commits_per_day() -> None:
     assert format_commits_per_day(0.97) == "0.9/d"
     assert format_commits_per_day(12.2) == "12/d"
     assert format_commits_per_day(999) == "999/d"
+    assert format_commits_per_day(999.5) == "1k/d"
     assert format_commits_per_day(1_234) == "1.2k/d"
     assert format_commits_per_day(10_200) == "10k/d"
     assert format_commits_per_day(842_200) == "842k/d"
+    assert format_commits_per_day(999_500) == "1M/d"
     assert format_commits_per_day(1_234_000) == "1.2M/d"
     assert format_commits_per_day(10_200_000) == "10M/d"
+    assert format_commits_per_day(1_234_000_000) == "1.2B/d"
+    assert format_commits_per_day(1_234_000_000_000) == "1.2T/d"
+    assert format_commits_per_day(999_500_000_000_000) == "1P/d"
+    assert format_commits_per_day(999_500_000_000_000_000) == "999P/d"
 
 
 def _day(day: str, count: int) -> ContributionDay:

@@ -55,6 +55,8 @@ The overlay uses compact `/d` formatting:
 1.2k/d
 10k/d
 1.2M/d
+1B/d
+1.2T/d
 ```
 
 The value is drawn with a tiny fixed pixel font over the bottom-left of the
