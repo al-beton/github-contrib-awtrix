@@ -14,10 +14,9 @@ BLANK_COLOR = "#000000"
 
 def render_terminal(grid: ContributionGrid) -> str:
     lines: list[str] = []
-    for row in range(FRAME_HEIGHT):
+    for row in frame_colors(grid):
         parts: list[str] = []
-        for column in range(FRAME_WIDTH):
-            color = _cell_color(grid.weeks[column], row)
+        for color in row:
             red, green, blue = _hex_to_rgb(color)
             parts.append(f"\033[48;2;{red};{green};{blue}m  \033[0m")
         lines.append("".join(parts))
@@ -28,15 +27,22 @@ def write_png(grid: ContributionGrid, path: Path, *, scale: int = PNG_SCALE) -> 
     image = Image.new("RGB", (FRAME_WIDTH * scale, FRAME_HEIGHT * scale), (0, 0, 0))
     draw = ImageDraw.Draw(image)
 
-    for row in range(FRAME_HEIGHT):
-        for column in range(FRAME_WIDTH):
-            color = _hex_to_rgb(_cell_color(grid.weeks[column], row))
+    for row, colors in enumerate(frame_colors(grid)):
+        for column, color_hex in enumerate(colors):
+            color = _hex_to_rgb(color_hex)
             x = column * scale
             y = row * scale
             draw.rectangle((x, y, x + scale - 1, y + scale - 1), fill=color)
 
     path.parent.mkdir(parents=True, exist_ok=True)
     image.save(path)
+
+
+def frame_colors(grid: ContributionGrid) -> list[list[str]]:
+    return [
+        [_cell_color(grid.weeks[column], row) for column in range(FRAME_WIDTH)]
+        for row in range(FRAME_HEIGHT)
+    ]
 
 
 def _cell_color(week: list[ContributionDay], row: int) -> str:
