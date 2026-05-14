@@ -255,3 +255,164 @@ def test_push_no_velocity_overrides_env(
 
     assert exit_code == 0
     assert pushed == [False]
+
+
+def test_commit_search_source_does_not_require_login_or_repo(
+    monkeypatch,
+    sample_grid: ContributionGrid,
+) -> None:
+    pushed: list[str] = []
+
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: None)
+    monkeypatch.setattr(
+        cli,
+        "fetch_commit_search_grid",
+        lambda **_: sample_grid,
+    )
+    monkeypatch.setattr(
+        cli.AwtrixClient,
+        "push_grid",
+        lambda *_, color_mode, **__: pushed.append(color_mode),
+    )
+
+    exit_code = cli.main(
+        [
+            "push",
+            "--source",
+            "commit-search",
+            "--author-email",
+            "bot@example.com",
+            "--color-mode",
+            "purple",
+        ]
+    )
+
+    assert exit_code == 0
+    assert pushed == ["purple"]
+
+
+def test_commit_search_source_requires_author_email(
+    monkeypatch,
+    sample_grid: ContributionGrid,
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(
+        cli,
+        "fetch_commit_search_grid",
+        lambda **_: sample_grid,
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "push",
+                "--source",
+                "commit-search",
+            ]
+        )
+
+    assert exc_info.value.code == 1
+
+
+def test_commit_search_source_writes_outputs_before_push(
+    monkeypatch,
+    tmp_path: Path,
+    sample_grid: ContributionGrid,
+) -> None:
+    pushed: list[bool] = []
+
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(
+        cli,
+        "fetch_commit_search_grid",
+        lambda **_: sample_grid,
+    )
+    monkeypatch.setattr(
+        cli.AwtrixClient,
+        "push_grid",
+        lambda *_, velocity, **__: pushed.append(velocity),
+    )
+
+    json_path = tmp_path / "grid.json"
+    exit_code = cli.main(
+        [
+            "push",
+            "--source",
+            "commit-search",
+            "--repo",
+            "owner/repo",
+            "--author-email",
+            "bot@example.com",
+            "--velocity",
+            "--json",
+            str(json_path),
+        ]
+    )
+
+    assert exit_code == 0
+    assert json.loads(json_path.read_text())["login"] == "al-beton"
+    assert pushed == [True]
+
+
+def test_commit_search_source_passes_org(
+    monkeypatch,
+    sample_grid: ContributionGrid,
+) -> None:
+    scopes: list[str | None] = []
+
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(
+        cli,
+        "fetch_commit_search_grid",
+        lambda **kwargs: scopes.append(kwargs["org"]) or sample_grid,
+    )
+    monkeypatch.setattr(cli.AwtrixClient, "push_grid", lambda *_, **__: None)
+
+    exit_code = cli.main(
+        [
+            "push",
+            "--source",
+            "commit-search",
+            "--org",
+            "AdvantageLabs",
+            "--author-email",
+            "bot@example.com",
+        ]
+    )
+
+    assert exit_code == 0
+    assert scopes == ["AdvantageLabs"]
+
+
+def test_commit_search_source_rejects_org_and_repo(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.delenv("GITHUB_LOGIN", raising=False)
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "push",
+                "--source",
+                "commit-search",
+                "--org",
+                "AdvantageLabs",
+                "--repo",
+                "owner/repo",
+                "--author-email",
+                "bot@example.com",
+            ]
+        )
+
+    assert exc_info.value.code == 1

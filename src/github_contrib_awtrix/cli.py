@@ -8,6 +8,7 @@ from pathlib import Path
 
 from github_contrib_awtrix.awtrix import AwtrixClient, AwtrixError
 from github_contrib_awtrix.colors import COLOR_MODES, ColorMode
+from github_contrib_awtrix.commit_search import fetch_commit_search_grid
 from github_contrib_awtrix.config import resolve_config
 from github_contrib_awtrix.github import GitHubError, fetch_contribution_grid
 from github_contrib_awtrix.grid import ContributionGrid
@@ -30,6 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     push = subparsers.add_parser("push", help="Fetch GitHub data and update AWTRIX.")
     _add_output_args(push)
+    _add_source_args(push)
     _add_common_config_args(push)
 
     uninstall = subparsers.add_parser(
@@ -75,6 +77,27 @@ def _add_output_args(parser: argparse.ArgumentParser) -> None:
 def _add_github_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--token", help="Override GITHUB_TOKEN.")
     parser.add_argument("--login", help="Override GITHUB_LOGIN.")
+
+
+def _add_source_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--source",
+        choices=("profile", "commit-search"),
+        default="profile",
+        help="Data source. Defaults to GitHub profile contribution calendar.",
+    )
+    parser.add_argument(
+        "--org",
+        help="Optional organization narrowing filter for --source commit-search.",
+    )
+    parser.add_argument(
+        "--repo",
+        help="Optional OWNER/REPO narrowing filter for --source commit-search.",
+    )
+    parser.add_argument(
+        "--author-email",
+        help="Exact primary commit author email for --source commit-search.",
+    )
 
 
 def _add_awtrix_args(parser: argparse.ArgumentParser) -> None:
@@ -167,12 +190,15 @@ def _push(args: argparse.Namespace) -> None:
         awtrix_app_duration=args.awtrix_app_duration,
         color_mode=args.color_mode,
         velocity=args.velocity,
+        require_github=False,
         require_awtrix=True,
     )
-    if config.token is None or config.login is None or config.awtrix_url is None:
-        raise ValueError("missing required config")
+    if config.token is None:
+        raise ValueError("missing required config: GITHUB_TOKEN")
+    if config.awtrix_url is None:
+        raise ValueError("missing required config: AWTRIX_URL")
 
-    grid = fetch_contribution_grid(token=config.token, login=config.login)
+    grid = _fetch_grid_for_source(args, token=config.token, login=config.login)
     _write_outputs(args, grid, color_mode=config.color_mode, velocity=config.velocity)
     AwtrixClient(config.awtrix_url).push_grid(
         config.awtrix_app_name,
@@ -182,6 +208,32 @@ def _push(args: argparse.Namespace) -> None:
         velocity=config.velocity,
     )
     print(f"Pushed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
+
+
+def _fetch_grid_for_source(
+    args: argparse.Namespace,
+    *,
+    token: str,
+    login: str | None,
+) -> ContributionGrid:
+    if args.source == "profile":
+        if login is None:
+            raise ValueError("missing required config: GITHUB_LOGIN")
+        return fetch_contribution_grid(token=token, login=login)
+
+    if args.source == "commit-search":
+        if not args.author_email:
+            raise ValueError("--author-email is required with --source commit-search")
+        if args.org and args.repo:
+            raise ValueError("--org and --repo cannot be used together")
+        return fetch_commit_search_grid(
+            token=token,
+            author_email=args.author_email,
+            org=args.org,
+            repo=args.repo,
+        )
+
+    raise ValueError(f"unknown source: {args.source}")
 
 
 def _uninstall(args: argparse.Namespace) -> None:

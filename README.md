@@ -7,10 +7,10 @@ with cron/launchd later.
 
 ## V1
 
-- one GitHub login
+- one GitHub login, or one exact commit author email
 - last 32 weeks ending today, using the local machine date
 - GitHub GraphQL contribution calendar as the data source
-- GitHub's returned colors
+- GitHub commit search as the bot/agent commit data source
 - 32 x 8 visual frame for terminal, PNG, and AWTRIX output
 - blank/off eighth row
 
@@ -33,7 +33,7 @@ Overrides are command-specific and must appear after the subcommand:
 ```text
 doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
-push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode, --velocity, --no-velocity
+push: --source, --org, --repo, --author-email, --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode, --velocity, --no-velocity
 uninstall: --awtrix-url, --awtrix-app-name
 ```
 
@@ -50,6 +50,15 @@ github-contrib-awtrix push \
   --json out/grid.json \
   --terminal \
   --png out/preview.png
+github-contrib-awtrix push \
+  --source commit-search \
+  --author-email bot@example.com \
+  --color-mode purple
+github-contrib-awtrix push \
+  --source commit-search \
+  --org OWNER \
+  --author-email bot@example.com \
+  --color-mode purple
 github-contrib-awtrix uninstall
 ```
 
@@ -58,6 +67,18 @@ code to install. `install` creates the named page with a placeholder; `push`
 updates that page with the current contribution grid.
 
 `push` fetches once, then renders each requested output from the same data.
+
+Sources:
+
+- `profile`: the default; uses `GITHUB_LOGIN` and GitHub's profile contribution calendar
+- `commit-search`: uses `--author-email EMAIL` to count matching primary commit authors across commits visible to the token
+
+`commit-search` can be narrowed with `--org OWNER` or `--repo OWNER/REPO`, but
+both are optional. `--org` and `--repo` cannot be used together.
+
+`commit-search` is a commit activity calendar. It is not GitHub's profile
+contribution calendar and does not include co-authors, PR authorship, other
+branches, or team rollups.
 
 Color modes:
 
