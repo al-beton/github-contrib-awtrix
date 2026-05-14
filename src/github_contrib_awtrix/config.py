@@ -19,6 +19,7 @@ class Config:
     awtrix_app_name: str = DEFAULT_AWTRIX_APP_NAME
     awtrix_app_duration: int = DEFAULT_AWTRIX_APP_DURATION
     color_mode: ColorMode = "github"
+    velocity: bool = False
 
 
 def load_dotenv(path: Path = Path(".env")) -> dict[str, str]:
@@ -43,6 +44,7 @@ def resolve_config(
     awtrix_app_name: str | None = None,
     awtrix_app_duration: str | None = None,
     color_mode: str | None = None,
+    velocity: bool | None = None,
     require_github: bool = True,
     require_awtrix: bool = False,
     env_file: Path = Path(".env"),
@@ -75,6 +77,10 @@ def resolve_config(
         or dotenv.get("GITHUB_CONTRIB_COLOR_MODE")
         or "github"
     )
+    resolved_velocity = _resolve_bool(
+        velocity,
+        env.get("GITHUB_CONTRIB_VELOCITY") or dotenv.get("GITHUB_CONTRIB_VELOCITY"),
+    )
 
     required_values: list[tuple[str, str | None]] = []
     if require_github:
@@ -99,6 +105,7 @@ def resolve_config(
         awtrix_app_name=resolved_awtrix_app_name,
         awtrix_app_duration=resolved_awtrix_app_duration,
         color_mode=resolved_color_mode,
+        velocity=resolved_velocity,
     )
 
 
@@ -110,3 +117,16 @@ def _parse_positive_int(value: str, name: str) -> int:
     if parsed <= 0:
         raise ValueError(f"{name} must be a positive integer")
     return parsed
+
+
+def _resolve_bool(cli_value: bool | None, config_value: str | None) -> bool:
+    if cli_value is not None:
+        return cli_value
+    if config_value is None:
+        return False
+    value = config_value.strip().lower()
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError("GITHUB_CONTRIB_VELOCITY must be true or false")

@@ -64,6 +64,12 @@ def _add_output_args(parser: argparse.ArgumentParser) -> None:
         choices=COLOR_MODES,
         help="Palette for terminal, PNG, and AWTRIX output.",
     )
+    parser.add_argument(
+        "--velocity",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Overlay average commits per day on terminal, PNG, and AWTRIX output.",
+    )
 
 
 def _add_github_args(parser: argparse.ArgumentParser) -> None:
@@ -160,18 +166,20 @@ def _push(args: argparse.Namespace) -> None:
         awtrix_app_name=args.awtrix_app_name,
         awtrix_app_duration=args.awtrix_app_duration,
         color_mode=args.color_mode,
+        velocity=args.velocity,
         require_awtrix=True,
     )
     if config.token is None or config.login is None or config.awtrix_url is None:
         raise ValueError("missing required config")
 
     grid = fetch_contribution_grid(token=config.token, login=config.login)
-    _write_outputs(args, grid, color_mode=config.color_mode)
+    _write_outputs(args, grid, color_mode=config.color_mode, velocity=config.velocity)
     AwtrixClient(config.awtrix_url).push_grid(
         config.awtrix_app_name,
         grid,
         duration_seconds=config.awtrix_app_duration,
         color_mode=config.color_mode,
+        velocity=config.velocity,
     )
     print(f"Pushed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
@@ -195,6 +203,7 @@ def _write_outputs(
     grid: ContributionGrid,
     *,
     color_mode: ColorMode,
+    velocity: bool,
 ) -> None:
     if args.json:
         json_output = json.dumps(grid.to_json(), indent=2)
@@ -206,10 +215,10 @@ def _write_outputs(
             json_path.write_text(f"{json_output}\n")
 
     if args.terminal:
-        print(render_terminal(grid, color_mode=color_mode))
+        print(render_terminal(grid, color_mode=color_mode, velocity=velocity))
 
     if args.png:
-        write_png(grid, Path(args.png), color_mode=color_mode)
+        write_png(grid, Path(args.png), color_mode=color_mode, velocity=velocity)
 
 
 if __name__ == "__main__":
