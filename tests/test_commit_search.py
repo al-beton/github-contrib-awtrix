@@ -54,6 +54,37 @@ def test_build_commit_search_grid_includes_optional_org_identity() -> None:
     assert grid.login == "bot@example.com@org:owner"
 
 
+def test_build_commit_search_grid_can_use_org_without_author() -> None:
+    grid = commit_search.build_commit_search_grid(
+        author_email=None,
+        org="owner",
+        commit_dates=[],
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+
+    assert grid.login == "org:owner"
+
+
+def test_build_commit_search_grid_can_use_repo_without_author() -> None:
+    grid = commit_search.build_commit_search_grid(
+        author_email=None,
+        repo="owner/repo",
+        commit_dates=[],
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+
+    assert grid.login == "owner/repo"
+
+
+def test_build_commit_search_grid_requires_a_filter() -> None:
+    with pytest.raises(ValueError, match="requires"):
+        commit_search.build_commit_search_grid(
+            author_email=None,
+            commit_dates=[],
+            now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+        )
+
+
 def test_build_commit_search_grid_rejects_org_and_repo() -> None:
     with pytest.raises(ValueError, match="--org and --repo"):
         commit_search.build_commit_search_grid(
@@ -229,9 +260,8 @@ def test_fetch_commit_search_grid_filters_author_email_and_pages(monkeypatch) ->
     assert payloads[0] == (
         "token",
         (
-            "author-email:bot@example.com "
-            "author-date:>=2025-10-04 "
-            "author-date:<=2026-05-15"
+            "author-date:2025-10-04..2026-05-15 "
+            "author-email:bot@example.com"
         ),
         1,
     )
@@ -256,9 +286,8 @@ def test_fetch_commit_search_grid_can_narrow_to_repo(monkeypatch) -> None:
 
     assert queries == [
         (
+            "author-date:2025-10-04..2026-05-15 "
             "author-email:bot@example.com "
-            "author-date:>=2025-10-04 "
-            "author-date:<=2026-05-15 "
             "repo:owner/repo"
         )
     ]
@@ -282,12 +311,70 @@ def test_fetch_commit_search_grid_can_narrow_to_org(monkeypatch) -> None:
 
     assert queries == [
         (
+            "author-date:2025-10-04..2026-05-15 "
             "author-email:bot@example.com "
-            "author-date:>=2025-10-04 "
-            "author-date:<=2026-05-15 "
             "org:owner"
         )
     ]
+
+
+def test_fetch_commit_search_grid_can_search_org_without_author(monkeypatch) -> None:
+    queries: list[str] = []
+
+    def fake_get_commit_search(*, token, query, page):
+        queries.append(query)
+        return {"total_count": 0, "incomplete_results": False, "items": []}
+
+    monkeypatch.setattr(commit_search, "_get_commit_search", fake_get_commit_search)
+
+    grid = commit_search.fetch_commit_search_grid(
+        token="token",
+        org="owner",
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+
+    assert grid.login == "org:owner"
+    assert queries == ["author-date:2025-10-04..2026-05-15 org:owner"]
+
+
+def test_fetch_commit_search_grid_without_author_counts_every_author(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        commit_search,
+        "_get_commit_search",
+        lambda **_: {
+            "total_count": 2,
+            "incomplete_results": False,
+            "items": [
+                {
+                    "commit": {
+                        "author": {
+                            "email": "one@example.com",
+                            "date": "2026-04-22T10:00:00Z",
+                        }
+                    }
+                },
+                {
+                    "commit": {
+                        "author": {
+                            "email": "two@example.com",
+                            "date": "2026-04-22T11:00:00Z",
+                        }
+                    }
+                },
+            ],
+        },
+    )
+
+    grid = commit_search.fetch_commit_search_grid(
+        token="token",
+        org="owner",
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+    counts = {day.date: day.contribution_count for week in grid.weeks for day in week}
+
+    assert counts["2026-04-22"] == 2
 
 
 def test_fetch_commit_search_grid_rejects_org_and_repo() -> None:

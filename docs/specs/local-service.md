@@ -8,9 +8,7 @@ Fetch GitHub activity and turn it into 32 weeks of grid data.
 
 - `GITHUB_TOKEN`
 - `GITHUB_LOGIN` for profile mode
-- `--author-email EMAIL` for commit-search mode
-- optional `--org OWNER` narrowing for commit-search mode
-- optional `--repo OWNER/REPO` narrowing for commit-search mode
+- at least one of `--author-email EMAIL`, `--org OWNER`, or `--repo OWNER/REPO` for commit-search mode
 - local machine date
 
 CLI flags may override `.env` values.
@@ -37,10 +35,14 @@ Use GitHub's returned week/day structure and day fields:
 - `color`
 
 Commit-search mode uses GitHub commit search. It counts commits visible to the
-token whose primary author email exactly matches `--author-email`.
+token using at least one filter:
 
-Commit-search mode may add `org:OWNER` or `repo:OWNER/REPO` to the search query.
-Those filters are optional and mutually exclusive.
+- `--author-email EMAIL`: exact primary commit author email
+- `--org OWNER`: all visible commits in one org
+- `--repo OWNER/REPO`: all visible commits in one repo
+
+`--author-email` can be combined with `--org` or `--repo`. `--org` and `--repo`
+are mutually exclusive.
 
 Commit-search mode computes contribution levels from the visible window so it can
 reuse the same renderers as profile mode.
@@ -79,7 +81,6 @@ Each cell includes:
 ## Out Of Scope For V1
 
 - teams
-- org-wide mode without a commit author identity
 - co-author counting
 - search result sets larger than GitHub's commit search cap
 - GitHub webhooks

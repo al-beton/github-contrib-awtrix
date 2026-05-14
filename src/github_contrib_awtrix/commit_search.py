@@ -35,11 +35,12 @@ GITHUB_LEVEL_COLORS = {
 def fetch_commit_search_grid(
     *,
     token: str,
-    author_email: str,
+    author_email: str | None = None,
     org: str | None = None,
     repo: str | None = None,
     now: datetime | None = None,
 ) -> ContributionGrid:
+    _validate_search_filters(author_email=author_email, org=org, repo=repo)
     current_time = _current_time(now)
     today = current_time.date()
     start = visible_window_start(today)
@@ -97,14 +98,14 @@ def visible_window_start(today: date) -> date:
 def matching_author_dates(
     nodes: list[dict[str, Any]],
     *,
-    author_email: str,
+    author_email: str | None,
     target_time: datetime,
 ) -> list[date]:
     dates: list[date] = []
     for node in nodes:
         commit = node.get("commit") or {}
         author = commit.get("author") or {}
-        if author.get("email") != author_email:
+        if author_email is not None and author.get("email") != author_email:
             continue
         raw_date = author.get("date")
         if not isinstance(raw_date, str):
@@ -115,13 +116,13 @@ def matching_author_dates(
 
 def build_commit_search_grid(
     *,
-    author_email: str,
+    author_email: str | None,
     commit_dates: list[date],
     org: str | None = None,
     repo: str | None = None,
     now: datetime | None = None,
 ) -> ContributionGrid:
-    _validate_scope(org=org, repo=repo)
+    _validate_search_filters(author_email=author_email, org=org, repo=repo)
     current_time = _current_time(now)
     today = current_time.date()
     start = visible_window_start(today)
@@ -157,18 +158,18 @@ def build_commit_search_grid(
 def _search_commits(
     *,
     token: str,
-    author_email: str,
+    author_email: str | None,
     start: date,
     end: date,
     org: str | None,
     repo: str | None,
 ) -> list[dict[str, Any]]:
-    _validate_scope(org=org, repo=repo)
+    _validate_search_filters(author_email=author_email, org=org, repo=repo)
     query_parts = [
-        f"author-email:{author_email}",
-        f"author-date:>={start.isoformat()}",
-        f"author-date:<={end.isoformat()}",
+        f"author-date:{start.isoformat()}..{end.isoformat()}",
     ]
+    if author_email is not None:
+        query_parts.append(f"author-email:{author_email}")
     if org is not None:
         query_parts.append(f"org:{parse_org(org)}")
     if repo is not None:
@@ -233,12 +234,25 @@ def _get_commit_search(*, token: str, query: str, page: int) -> dict[str, Any]:
     return json.loads(response_body)
 
 
-def _validate_scope(*, org: str | None, repo: str | None) -> None:
+def _validate_search_filters(
+    *,
+    author_email: str | None,
+    org: str | None,
+    repo: str | None,
+) -> None:
     if org is not None and repo is not None:
         raise ValueError("--org and --repo cannot be used together")
+    if author_email is None and org is None and repo is None:
+        raise ValueError("commit-search requires --author-email, --org, or --repo")
 
 
-def _identity(*, author_email: str, org: str | None, repo: str | None) -> str:
+def _identity(*, author_email: str | None, org: str | None, repo: str | None) -> str:
+    if author_email is None:
+        if org is not None:
+            return f"org:{org}"
+        if repo is not None:
+            return repo
+        raise ValueError("commit-search requires --author-email, --org, or --repo")
     if org is not None:
         return f"{author_email}@org:{org}"
     if repo is not None:

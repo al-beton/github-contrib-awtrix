@@ -222,8 +222,10 @@ def _fetch_grid_for_source(
         return fetch_contribution_grid(token=token, login=login)
 
     if args.source == "commit-search":
-        if not args.author_email:
-            raise ValueError("--author-email is required with --source commit-search")
+        if not args.author_email and not args.org and not args.repo:
+            raise ValueError(
+                "--source commit-search requires --author-email, --org, or --repo"
+            )
         if args.org and args.repo:
             raise ValueError("--org and --repo cannot be used together")
         return fetch_commit_search_grid(
