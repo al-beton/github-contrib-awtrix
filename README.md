@@ -25,6 +25,7 @@ AWTRIX_URL=http://awtrix_xxxxxx.local
 AWTRIX_APP_NAME=github_contribution_graph
 AWTRIX_APP_DURATION=7
 GITHUB_CONTRIB_COLOR_MODE=github
+GITHUB_CONTRIB_VELOCITY=false
 ```
 
 Overrides are command-specific and must appear after the subcommand:
@@ -32,7 +33,7 @@ Overrides are command-specific and must appear after the subcommand:
 ```text
 doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
-push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode
+push: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode, --velocity, --no-velocity
 uninstall: --awtrix-url, --awtrix-app-name
 ```
 
@@ -45,6 +46,7 @@ github-contrib-awtrix doctor
 github-contrib-awtrix install
 github-contrib-awtrix push \
   --color-mode green \
+  --velocity \
   --json out/grid.json \
   --terminal \
   --png out/preview.png
@@ -64,6 +66,15 @@ Color modes:
 - `green`: black empty cells with a green-to-white scale
 - `purple`: black empty cells with a purple-to-white scale
 - `yellow`: black empty cells with an amber/yellow-to-white scale
+
+Velocity overlay:
+
+- off by default
+- enabled with `GITHUB_CONTRIB_VELOCITY=true` or `push --velocity`
+- disabled for a command with `push --no-velocity`
+- displays average commits per day over the visible real days
+- draws the compact value, such as `0.4/d`, `12/d`, or `1.2k/d`, over the bottom-left of the grid
+- applies to terminal, PNG, and AWTRIX output
 
 ## Outputs
 

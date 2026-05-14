@@ -7,6 +7,7 @@ from PIL import Image
 from github_contrib_awtrix.colors import contribution_color
 from github_contrib_awtrix.grid import ContributionDay, ContributionGrid
 from github_contrib_awtrix.render import frame_colors, render_terminal, write_png
+from github_contrib_awtrix.velocity import VELOCITY_COLOR
 
 
 def test_terminal_render_has_8_rows(sample_grid: ContributionGrid) -> None:
@@ -33,6 +34,14 @@ def test_green_color_mode_uses_black_empty_cells(sample_grid: ContributionGrid) 
     assert colors[0][0] == "#000000"
     assert colors[0][1] == "#00240f"
     assert colors[-1] == ["#000000"] * 32
+
+
+def test_velocity_overlay_draws_over_bottom_left(sample_grid: ContributionGrid) -> None:
+    colors = frame_colors(sample_grid, color_mode="green", velocity=True)
+
+    assert colors[3][0] == VELOCITY_COLOR
+    assert colors[7][2] == VELOCITY_COLOR
+    assert colors[-1] != ["#000000"] * 32
 
 
 def test_display_color_modes_have_distinct_scales(

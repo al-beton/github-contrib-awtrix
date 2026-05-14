@@ -26,6 +26,40 @@ Render the GitHub contribution grid as a 32 x 8 frame.
 
 `--color-mode` overrides it for `push`.
 
+## Velocity Overlay
+
+Velocity is an optional same-page overlay. It does not create a second AWTRIX
+CustomApp page.
+
+`GITHUB_CONTRIB_VELOCITY=true` enables it by default.
+
+`push --velocity` enables it for one run.
+
+`push --no-velocity` disables it for one run.
+
+The metric is average commits per day over the visible real-day period:
+
+```text
+velocity_per_day = total_visible_commits / visible_real_days
+```
+
+Future padding cells in the current week do not count as visible real days.
+
+The overlay uses compact `/d` formatting:
+
+```text
+0/d
+0.4/d
+12/d
+999/d
+1.2k/d
+10k/d
+1.2M/d
+```
+
+The value is drawn with a tiny fixed pixel font over the bottom-left of the
+32 x 8 frame.
+
 ## App Naming
 
 - AWTRIX app id/name: `github_contribution_graph`
@@ -57,7 +91,8 @@ the device.
 ```
 
 `push` updates the same page with drawing instructions for the current 32 x 8
-frame.
+frame. When velocity is enabled, the overlay is drawn into the same frame before
+the payload is sent.
 
 `uninstall` removes the page by sending an empty payload to the same endpoint.
 
