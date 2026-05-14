@@ -22,6 +22,7 @@ with cron/launchd later.
 GITHUB_TOKEN=...
 GITHUB_LOGIN=al-beton
 AWTRIX_URL=http://awtrix_xxxxxx.local
+AWTRIX_APP_NAME=github_contribution_graph
 ```
 
 Overrides:
@@ -30,22 +31,28 @@ Overrides:
 --token
 --login
 --awtrix-url
+--awtrix-app-name
 ```
 
 ## Command Shape
 
-No flags prints help and does nothing.
+No command prints help and does nothing.
 
 ```bash
-github-contrib-awtrix \
+github-contrib-awtrix doctor
+github-contrib-awtrix install
+github-contrib-awtrix push \
   --json out/grid.json \
   --terminal \
-  --png out/preview.png \
-  --push
+  --png out/preview.png
+github-contrib-awtrix uninstall
 ```
 
-Outputs can be combined in one run. The command fetches once, then renders each
-requested output from the same data.
+AWTRIX CustomApps are named pages in the device rotation. There is no on-device
+code to install. `install` creates the named page with a placeholder; `push`
+updates that page with the current contribution grid.
+
+`push` fetches once, then renders each requested output from the same data.
 
 ## Outputs
 
@@ -53,12 +60,12 @@ requested output from the same data.
 - `--json <path>` writes 32 x 7 contribution data to a file
 - `--terminal` prints a 32 x 8 ANSI color preview
 - `--png <path>` writes a 32 x 8 PNG preview at 10x scale; path is required
-- `--push` sends the 32 x 8 frame to AWTRIX over local HTTP
+- `push` sends the 32 x 8 frame to AWTRIX over local HTTP
 
 Output order is:
 
 ```text
-json -> terminal -> png -> push
+json -> terminal -> png -> AWTRIX
 ```
 
 If one output fails, the command exits non-zero. Already-written outputs are not
