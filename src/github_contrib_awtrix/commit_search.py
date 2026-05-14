@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 import ssl
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, tzinfo
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import certifi
 
@@ -16,6 +20,8 @@ from github_contrib_awtrix.grid import ContributionDay, ContributionGrid
 
 WEEK_COUNT = 32
 GITHUB_COMMIT_SEARCH_URL = "https://api.github.com/search/commits"
+OWNER_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
+REPO_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 GITHUB_EMPTY_COLOR = "#ebedf0"
 GITHUB_LEVEL_COLORS = {
     "NONE": GITHUB_EMPTY_COLOR,
@@ -63,7 +69,7 @@ def fetch_commit_search_grid(
 
 
 def parse_org(org: str) -> str:
-    if not org or "/" in org or org.strip() != org:
+    if not OWNER_PATTERN.fullmatch(org):
         raise ValueError("org must be a GitHub organization login")
     return org
 
@@ -71,13 +77,12 @@ def parse_org(org: str) -> str:
 def parse_repo(repo: str) -> tuple[str, str]:
     owner, separator, name = repo.partition("/")
     if (
-        repo.strip() != repo
-        or not owner
+        not owner
         or separator != "/"
         or not name
         or "/" in name
-        or owner.strip() != owner
-        or name.strip() != name
+        or not OWNER_PATTERN.fullmatch(owner)
+        or not REPO_PATTERN.fullmatch(name)
     ):
         raise ValueError("repo must be in OWNER/REPO form")
     return owner, name
@@ -258,7 +263,11 @@ def _parse_github_datetime(raw_date: str, *, target_time: datetime) -> datetime:
     parsed = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         parsed = parsed.astimezone()
-    return parsed.astimezone(target_time.tzinfo)
+
+    timezone = _conversion_timezone(target_time)
+    if timezone is None:
+        return parsed.astimezone()
+    return parsed.astimezone(timezone)
 
 
 def _current_time(now: datetime | None) -> datetime:
@@ -266,3 +275,35 @@ def _current_time(now: datetime | None) -> datetime:
     if current_time.tzinfo is None:
         return current_time.astimezone()
     return current_time
+
+
+def _conversion_timezone(target_time: datetime) -> tzinfo | None:
+    if target_time.tzinfo is UTC or isinstance(target_time.tzinfo, ZoneInfo):
+        return target_time.tzinfo
+    return _system_zoneinfo()
+
+
+def _system_zoneinfo() -> ZoneInfo | None:
+    timezone_name = os.environ.get("TZ")
+    if timezone_name:
+        return _load_zoneinfo(timezone_name)
+
+    localtime = "/etc/localtime"
+    if os.path.islink(localtime):
+        target = os.path.realpath(localtime)
+        marker = "/zoneinfo/"
+        if marker in target:
+            return _load_zoneinfo(target.split(marker, 1)[1])
+
+    for timezone_name in time.tzname:
+        timezone = _load_zoneinfo(timezone_name)
+        if timezone is not None:
+            return timezone
+    return None
+
+
+def _load_zoneinfo(timezone_name: str) -> ZoneInfo | None:
+    try:
+        return ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        return None

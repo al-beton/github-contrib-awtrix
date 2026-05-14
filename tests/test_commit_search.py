@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -149,6 +150,25 @@ def test_matching_author_dates_uses_exact_email_and_local_date() -> None:
     assert dates == [date(2026, 4, 23)]
 
 
+def test_matching_author_dates_uses_zoneinfo_dst_rules() -> None:
+    dates = commit_search.matching_author_dates(
+        [
+            {
+                "commit": {
+                    "author": {
+                        "email": "bot@example.com",
+                        "date": "2026-03-28T23:30:00Z",
+                    }
+                },
+            }
+        ],
+        author_email="bot@example.com",
+        target_time=datetime(2026, 5, 14, 12, tzinfo=ZoneInfo("Europe/Berlin")),
+    )
+
+    assert dates == [date(2026, 3, 29)]
+
+
 def test_fetch_commit_search_grid_filters_author_email_and_pages(monkeypatch) -> None:
     payloads = []
     pages = [
@@ -286,6 +306,16 @@ def test_parse_org_rejects_invalid_value() -> None:
         commit_search.parse_org("owner/repo")
 
 
+def test_parse_org_rejects_search_injection() -> None:
+    with pytest.raises(ValueError, match="organization login"):
+        commit_search.parse_org("owner fork:true")
+
+
+def test_parse_org_rejects_leading_hyphen() -> None:
+    with pytest.raises(ValueError, match="organization login"):
+        commit_search.parse_org("-owner")
+
+
 def test_parse_repo_rejects_invalid_value() -> None:
     with pytest.raises(ValueError, match="OWNER/REPO"):
         commit_search.parse_repo("owner/repo/extra")
@@ -299,6 +329,11 @@ def test_parse_repo_rejects_surrounding_whitespace() -> None:
 def test_parse_repo_rejects_component_whitespace() -> None:
     with pytest.raises(ValueError, match="OWNER/REPO"):
         commit_search.parse_repo("owner /repo")
+
+
+def test_parse_repo_rejects_search_injection() -> None:
+    with pytest.raises(ValueError, match="OWNER/REPO"):
+        commit_search.parse_repo("owner/repo fork:true")
 
 
 def test_fetch_commit_search_grid_errors_on_incomplete_results(monkeypatch) -> None:
