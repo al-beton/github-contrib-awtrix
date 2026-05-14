@@ -51,6 +51,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_help()
         return 0
 
+    if args.push and not any((args.json, args.terminal, args.png)):
+        parser.error("--push is specified in the spec but not implemented yet")
+
     try:
         config = resolve_config(
             token=args.token,
