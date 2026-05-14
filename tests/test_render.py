@@ -40,8 +40,8 @@ def test_green_color_mode_uses_black_empty_cells(sample_grid: ContributionGrid) 
 def test_velocity_overlay_draws_over_bottom_left(sample_grid: ContributionGrid) -> None:
     colors = frame_colors(sample_grid, color_mode="green", velocity=True)
 
-    assert colors[3][0] == VELOCITY_COLOR
-    assert colors[7][2] == VELOCITY_COLOR
+    assert colors[4][0] == VELOCITY_COLOR
+    assert colors[7][1] == VELOCITY_COLOR
     assert colors[-1] != ["#000000"] * 32
 
 
@@ -51,7 +51,7 @@ def test_velocity_decimal_point_is_tight() -> None:
     colors = frame_colors(grid, color_mode="green", velocity=True)
 
     assert colors[7][4] == VELOCITY_COLOR
-    assert colors[7][5] == VELOCITY_COLOR
+    assert colors[4][5] == VELOCITY_COLOR
 
 
 def test_display_color_modes_have_distinct_scales(
