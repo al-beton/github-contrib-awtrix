@@ -6,6 +6,7 @@
 app_name = "github_green"
 source = "profile"
 login = "octocat"
+token_env = "GITHUB_TOKEN"
 color_mode = "green"
 velocity = true
 
@@ -13,6 +14,7 @@ velocity = true
 app_name = "github_purple"
 source = "commit-search"
 org = "example-org"
+token_env = "GITHUB_TOKEN"
 color_mode = "purple"
 velocity = true
 
@@ -20,5 +22,6 @@ velocity = true
 app_name = "github_yellow"
 source = "commit-search"
 repo = "example-org/example-repo"
+token_env = "GITHUB_TOKEN"
 color_mode = "yellow"
 velocity = true

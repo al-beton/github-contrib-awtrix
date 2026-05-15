@@ -20,6 +20,7 @@ Edit the app entries for your own rotation:
 app_name = "github_green"
 source = "profile"
 login = "octocat"
+token_env = "GITHUB_TOKEN"
 color_mode = "green"
 velocity = true
 
@@ -27,6 +28,7 @@ velocity = true
 app_name = "github_purple"
 source = "commit-search"
 org = "example-org"
+token_env = "GITHUB_TOKEN"
 color_mode = "purple"
 velocity = true
 ```
@@ -39,12 +41,17 @@ Supported fields:
 - `org`: GitHub org for `commit-search`
 - `repo`: `OWNER/REPO` for `commit-search`
 - `author_email`: exact commit author email for `commit-search`
+- `token_env`: optional env/`.env` key to use as this app's GitHub token
 - `color_mode`: one of the supported display palettes
 - `velocity`: `true` or `false`
 - `awtrix_app_duration`: optional per-app duration in seconds
 
 `profile` requires `login`. `commit-search` requires at least one of
 `author_email`, `org`, or `repo`. `org` and `repo` cannot be combined.
+
+`token_env` lets different apps use different token scopes without putting
+secret values in TOML. If omitted, `refresh` uses the normal token resolution:
+`--token`, `GITHUB_TOKEN`, then `.env`.
 
 Secrets and device config still come from `.env` or environment variables:
 

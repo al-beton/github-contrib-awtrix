@@ -15,6 +15,7 @@ def test_load_refresh_config_parses_apps(tmp_path: Path) -> None:
 app_name = "github_green"
 source = "profile"
 login = "octocat"
+token_env = "GITHUB_TOKEN"
 color_mode = "green"
 velocity = true
 
@@ -34,6 +35,7 @@ awtrix_app_duration = 10
     assert config.apps[0].app_name == "github_green"
     assert config.apps[0].source == "profile"
     assert config.apps[0].login == "octocat"
+    assert config.apps[0].token_env == "GITHUB_TOKEN"
     assert config.apps[0].color_mode == "green"
     assert config.apps[0].velocity is True
     assert config.apps[1].app_name == "github_purple"
@@ -78,4 +80,20 @@ repo = "example-org/example-repo"
     )
 
     with pytest.raises(ValueError, match="both org and repo"):
+        load_refresh_config(path)
+
+
+def test_load_refresh_config_rejects_invalid_token_env(tmp_path: Path) -> None:
+    path = tmp_path / "rotation.toml"
+    path.write_text(
+        """
+[[apps]]
+app_name = "github_green"
+source = "profile"
+login = "octocat"
+token_env = "GITHUB TOKEN"
+"""
+    )
+
+    with pytest.raises(ValueError, match="token_env"):
         load_refresh_config(path)
