@@ -319,25 +319,148 @@ def test_fetch_commit_search_grid_can_narrow_to_org(monkeypatch) -> None:
 
 
 def test_fetch_commit_search_grid_can_search_org_without_author(monkeypatch) -> None:
-    queries: list[str] = []
+    calls: list[tuple[str, int]] = []
 
-    def fake_get_commit_search(*, token, query, page):
-        queries.append(query)
-        return {"total_count": 0, "incomplete_results": False, "items": []}
+    def fake_get_github_json(
+        *,
+        token,
+        url,
+        params,
+        accept="application/vnd.github+json",
+    ):
+        calls.append((url, int(params["page"])))
+        if url.endswith("/orgs/owner/repos"):
+            return [
+                {
+                    "full_name": "owner/active",
+                    "pushed_at": "2026-04-22T10:00:00Z",
+                },
+                {
+                    "full_name": "owner/old",
+                    "pushed_at": "2025-09-01T10:00:00Z",
+                },
+            ]
+        if url.endswith("/repos/owner/active/commits"):
+            return [
+                {
+                    "commit": {
+                        "author": {
+                            "email": "one@example.com",
+                            "date": "2026-04-22T10:00:00Z",
+                        }
+                    }
+                }
+            ]
+        raise AssertionError(f"unexpected URL: {url}")
 
-    monkeypatch.setattr(commit_search, "_get_commit_search", fake_get_commit_search)
+    monkeypatch.setattr(commit_search, "_get_github_json", fake_get_github_json)
 
     grid = commit_search.fetch_commit_search_grid(
         token="token",
         org="owner",
         now=datetime(2026, 5, 14, 12, tzinfo=UTC),
     )
+    counts = {day.date: day.contribution_count for week in grid.weeks for day in week}
 
     assert grid.login == "org:owner"
-    assert queries == ["author-date:2025-10-04..2026-05-15 org:owner"]
+    assert counts["2026-04-22"] == 1
+    assert calls == [
+        ("https://api.github.com/orgs/owner/repos", 1),
+        ("https://api.github.com/repos/owner/active/commits", 1),
+    ]
 
 
 def test_fetch_commit_search_grid_without_author_counts_every_author(
+    monkeypatch,
+) -> None:
+    def fake_get_github_json(
+        *,
+        token,
+        url,
+        params,
+        accept="application/vnd.github+json",
+    ):
+        assert url == "https://api.github.com/repos/owner/repo/commits"
+        return [
+            {
+                "commit": {
+                    "author": {
+                        "email": "one@example.com",
+                        "date": "2026-04-22T10:00:00Z",
+                    }
+                }
+            },
+            {
+                "commit": {
+                    "author": {
+                        "email": "two@example.com",
+                        "date": "2026-04-22T11:00:00Z",
+                    }
+                }
+            },
+        ]
+
+    monkeypatch.setattr(commit_search, "_get_github_json", fake_get_github_json)
+
+    grid = commit_search.fetch_commit_search_grid(
+        token="token",
+        repo="owner/repo",
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+    counts = {day.date: day.contribution_count for week in grid.weeks for day in week}
+
+    assert counts["2026-04-22"] == 2
+
+
+def test_fetch_commit_search_grid_paginates_repository_commits(monkeypatch) -> None:
+    pages = [
+        [
+            {
+                "commit": {
+                    "author": {
+                        "email": "one@example.com",
+                        "date": "2026-04-22T10:00:00Z",
+                    }
+                }
+            }
+        ]
+        * 100,
+        [
+            {
+                "commit": {
+                    "author": {
+                        "email": "two@example.com",
+                        "date": "2026-04-23T11:00:00Z",
+                    }
+                }
+            }
+        ],
+    ]
+
+    def fake_get_github_json(
+        *,
+        token,
+        url,
+        params,
+        accept="application/vnd.github+json",
+    ):
+        assert url == "https://api.github.com/repos/owner/repo/commits"
+        return pages[int(params["page"]) - 1]
+
+    monkeypatch.setattr(commit_search, "_get_github_json", fake_get_github_json)
+
+    grid = commit_search.fetch_commit_search_grid(
+        token="token",
+        repo="owner/repo",
+        now=datetime(2026, 5, 14, 12, tzinfo=UTC),
+    )
+    counts = {day.date: day.contribution_count for week in grid.weeks for day in week}
+
+    assert counts["2026-04-22"] == 100
+    assert counts["2026-04-23"] == 1
+
+
+def test_fetch_commit_search_grid_with_author_still_uses_commit_search(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
@@ -369,12 +492,13 @@ def test_fetch_commit_search_grid_without_author_counts_every_author(
 
     grid = commit_search.fetch_commit_search_grid(
         token="token",
+        author_email="one@example.com",
         org="owner",
         now=datetime(2026, 5, 14, 12, tzinfo=UTC),
     )
     counts = {day.date: day.contribution_count for week in grid.weeks for day in week}
 
-    assert counts["2026-04-22"] == 2
+    assert counts["2026-04-22"] == 1
 
 
 def test_fetch_commit_search_grid_rejects_org_and_repo() -> None:

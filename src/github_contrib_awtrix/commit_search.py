@@ -20,6 +20,7 @@ from github_contrib_awtrix.grid import ContributionDay, ContributionGrid
 
 WEEK_COUNT = 32
 GITHUB_COMMIT_SEARCH_URL = "https://api.github.com/search/commits"
+GITHUB_API_URL = "https://api.github.com"
 OWNER_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
 REPO_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 GITHUB_EMPTY_COLOR = "#ebedf0"
@@ -47,19 +48,29 @@ def fetch_commit_search_grid(
     query_start = start - timedelta(days=1)
     query_end = today + timedelta(days=1)
 
-    nodes = _search_commits(
-        token=token,
-        author_email=author_email,
-        start=query_start,
-        end=query_end,
-        org=org,
-        repo=repo,
-    )
-    commit_dates = matching_author_dates(
-        nodes,
-        author_email=author_email,
-        target_time=current_time,
-    )
+    if author_email is None and (org is not None or repo is not None):
+        commit_dates = _repository_commit_dates(
+            token=token,
+            start=query_start,
+            end=query_end,
+            org=org,
+            repo=repo,
+            target_time=current_time,
+        )
+    else:
+        nodes = _search_commits(
+            token=token,
+            author_email=author_email,
+            start=query_start,
+            end=query_end,
+            org=org,
+            repo=repo,
+        )
+        commit_dates = matching_author_dates(
+            nodes,
+            author_email=author_email,
+            target_time=current_time,
+        )
     return build_commit_search_grid(
         author_email=author_email,
         commit_dates=commit_dates,
@@ -204,19 +215,143 @@ def _search_commits(
         page += 1
 
 
+def _repository_commit_dates(
+    *,
+    token: str,
+    start: date,
+    end: date,
+    org: str | None,
+    repo: str | None,
+    target_time: datetime,
+) -> list[date]:
+    if repo is not None:
+        repositories = [repo]
+    elif org is not None:
+        repositories = _org_repository_names(token=token, org=org, start=start)
+    else:
+        raise ValueError("commit-search requires --org or --repo")
+
+    dates: list[date] = []
+    for repository in repositories:
+        dates.extend(
+            _repo_commit_dates(
+                token=token,
+                repo=repository,
+                start=start,
+                end=end,
+                target_time=target_time,
+            )
+        )
+    return dates
+
+
+def _org_repository_names(*, token: str, org: str, start: date) -> list[str]:
+    parsed_org = parse_org(org)
+    repositories: list[str] = []
+    page = 1
+    while True:
+        data = _get_github_json(
+            token=token,
+            url=f"{GITHUB_API_URL}/orgs/{parsed_org}/repos",
+            params={
+                "type": "all",
+                "sort": "pushed",
+                "direction": "desc",
+                "per_page": "100",
+                "page": str(page),
+            },
+        )
+        if not isinstance(data, list):
+            raise GitHubError("GitHub org repositories response was not a list")
+
+        for repository in data:
+            if not isinstance(repository, dict):
+                continue
+            pushed_at = repository.get("pushed_at")
+            if isinstance(pushed_at, str) and _github_date(pushed_at) < start:
+                continue
+            full_name = repository.get("full_name")
+            if isinstance(full_name, str):
+                parse_repo(full_name)
+                repositories.append(full_name)
+
+        if len(data) < 100:
+            return repositories
+        page += 1
+
+
+def _repo_commit_dates(
+    *,
+    token: str,
+    repo: str,
+    start: date,
+    end: date,
+    target_time: datetime,
+) -> list[date]:
+    owner, name = parse_repo(repo)
+    dates: list[date] = []
+    page = 1
+    while True:
+        data = _get_github_json(
+            token=token,
+            url=f"{GITHUB_API_URL}/repos/{owner}/{name}/commits",
+            params={
+                "since": f"{start.isoformat()}T00:00:00Z",
+                "until": f"{end.isoformat()}T23:59:59Z",
+                "per_page": "100",
+                "page": str(page),
+            },
+        )
+        if not isinstance(data, list):
+            raise GitHubError("GitHub repository commits response was not a list")
+
+        for node in data:
+            if not isinstance(node, dict):
+                continue
+            commit = node.get("commit") or {}
+            author = commit.get("author") or {}
+            raw_date = author.get("date")
+            if isinstance(raw_date, str):
+                dates.append(
+                    _parse_github_datetime(
+                        raw_date,
+                        target_time=target_time,
+                    ).date()
+                )
+
+        if len(data) < 100:
+            return dates
+        page += 1
+
+
 def _get_commit_search(*, token: str, query: str, page: int) -> dict[str, Any]:
-    params = urllib.parse.urlencode(
-        {
+    data = _get_github_json(
+        token=token,
+        url=GITHUB_COMMIT_SEARCH_URL,
+        params={
             "q": query,
             "per_page": "100",
             "page": str(page),
-        }
+        },
+        accept="application/vnd.github.cloak-preview+json",
     )
+    if not isinstance(data, dict):
+        raise GitHubError("GitHub commit search response was not an object")
+    return data
+
+
+def _get_github_json(
+    *,
+    token: str,
+    url: str,
+    params: dict[str, str],
+    accept: str = "application/vnd.github+json",
+) -> Any:
     request = urllib.request.Request(
-        f"{GITHUB_COMMIT_SEARCH_URL}?{params}",
+        f"{url}?{urllib.parse.urlencode(params)}",
         headers={
             "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github.cloak-preview+json",
+            "Accept": accept,
         },
     )
     try:
@@ -232,6 +367,10 @@ def _get_commit_search(*, token: str, query: str, page: int) -> dict[str, Any]:
         raise GitHubError(f"GitHub commit search failed: {exc.reason}") from exc
 
     return json.loads(response_body)
+
+
+def _github_date(raw_date: str) -> date:
+    return datetime.fromisoformat(raw_date.replace("Z", "+00:00")).date()
 
 
 def _validate_search_filters(
