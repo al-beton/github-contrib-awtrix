@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.github-contrib-awtrix.refresh</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/env</string>
+    <string>uv</string>
+    <string>run</string>
+    <string>github-contrib-awtrix</string>
+    <string>refresh</string>
+    <string>--config</string>
+    <string>/Users/YOU/.config/github-contrib-awtrix/rotation.toml</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/YOU/path/to/github-contrib-awtrix</string>
+
+  <key>StartInterval</key>
+  <integer>3600</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/YOU/Library/Logs/github-contrib-awtrix-refresh.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/YOU/Library/Logs/github-contrib-awtrix-refresh.log</string>
+</dict>
+</plist>

@@ -4,6 +4,7 @@ Working notes for `github-contrib-awtrix`.
 
 ## Specs
 
+- [Local scheduled refresh](local-refresh.md)
 - [GitHub data](specs/local-service.md)
 - [AWTRIX display](specs/awtrix-display.md)
 
