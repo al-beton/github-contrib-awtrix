@@ -12,6 +12,7 @@ from github_contrib_awtrix.commit_search import fetch_commit_search_grid
 from github_contrib_awtrix.config import resolve_config
 from github_contrib_awtrix.github import GitHubError, fetch_contribution_grid
 from github_contrib_awtrix.grid import ContributionGrid
+from github_contrib_awtrix.refresh import RefreshApp, load_refresh_config
 from github_contrib_awtrix.render import render_terminal, write_png
 
 
@@ -33,6 +34,19 @@ def build_parser() -> argparse.ArgumentParser:
     _add_output_args(push)
     _add_source_args(push)
     _add_common_config_args(push)
+
+    refresh = subparsers.add_parser(
+        "refresh",
+        help="Refresh multiple AWTRIX apps from a TOML config.",
+    )
+    refresh.add_argument(
+        "--config",
+        required=True,
+        type=Path,
+        help="Path to a refresh TOML config.",
+    )
+    _add_token_arg(refresh)
+    _add_awtrix_refresh_args(refresh)
 
     uninstall = subparsers.add_parser(
         "uninstall",
@@ -75,8 +89,12 @@ def _add_output_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_github_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--token", help="Override GITHUB_TOKEN.")
+    _add_token_arg(parser)
     parser.add_argument("--login", help="Override GITHUB_LOGIN.")
+
+
+def _add_token_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--token", help="Override GITHUB_TOKEN.")
 
 
 def _add_source_args(parser: argparse.ArgumentParser) -> None:
@@ -113,6 +131,14 @@ def _add_awtrix_identity_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--awtrix-app-name", help="Override AWTRIX_APP_NAME.")
 
 
+def _add_awtrix_refresh_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--awtrix-url", help="Override AWTRIX_URL.")
+    parser.add_argument(
+        "--awtrix-app-duration",
+        help="Override AWTRIX_APP_DURATION in seconds for apps without a config value.",
+    )
+
+
 def _add_common_config_args(parser: argparse.ArgumentParser) -> None:
     _add_github_args(parser)
     _add_awtrix_args(parser)
@@ -133,6 +159,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             _install(args)
         elif args.command == "push":
             _push(args)
+        elif args.command == "refresh":
+            _refresh(args)
         elif args.command == "uninstall":
             _uninstall(args)
         else:
@@ -198,7 +226,14 @@ def _push(args: argparse.Namespace) -> None:
     if config.awtrix_url is None:
         raise ValueError("missing required config: AWTRIX_URL")
 
-    grid = _fetch_grid_for_source(args, token=config.token, login=config.login)
+    grid = _fetch_grid_for_source(
+        source=args.source,
+        token=config.token,
+        login=config.login,
+        author_email=args.author_email,
+        org=args.org,
+        repo=args.repo,
+    )
     _write_outputs(args, grid, color_mode=config.color_mode, velocity=config.velocity)
     AwtrixClient(config.awtrix_url).push_grid(
         config.awtrix_app_name,
@@ -210,32 +245,94 @@ def _push(args: argparse.Namespace) -> None:
     print(f"Pushed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
 
 
-def _fetch_grid_for_source(
-    args: argparse.Namespace,
+def _refresh(args: argparse.Namespace) -> None:
+    refresh_config = load_refresh_config(args.config)
+    config = resolve_config(
+        token=args.token,
+        awtrix_url=args.awtrix_url,
+        awtrix_app_duration=args.awtrix_app_duration,
+        require_github=False,
+        require_awtrix=True,
+    )
+    if config.token is None:
+        raise ValueError("missing required config: GITHUB_TOKEN")
+    if config.awtrix_url is None:
+        raise ValueError("missing required config: AWTRIX_URL")
+
+    client = AwtrixClient(config.awtrix_url)
+    for app in refresh_config.apps:
+        _refresh_app(
+            app,
+            token=config.token,
+            awtrix_app_duration=args.awtrix_app_duration,
+            client=client,
+        )
+
+
+def _refresh_app(
+    app: RefreshApp,
     *,
     token: str,
+    awtrix_app_duration: str | None,
+    client: AwtrixClient,
+) -> None:
+    config = resolve_config(
+        token=token,
+        login=app.login,
+        awtrix_app_name=app.app_name,
+        awtrix_app_duration=app.awtrix_app_duration or awtrix_app_duration,
+        color_mode=app.color_mode,
+        velocity=app.velocity,
+        require_github=False,
+        require_awtrix=False,
+    )
+    grid = _fetch_grid_for_source(
+        source=app.source,
+        token=token,
+        login=config.login,
+        author_email=app.author_email,
+        org=app.org,
+        repo=app.repo,
+    )
+    client.push_grid(
+        config.awtrix_app_name,
+        grid,
+        duration_seconds=config.awtrix_app_duration,
+        color_mode=config.color_mode,
+        velocity=config.velocity,
+    )
+    print(f"Refreshed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
+
+
+def _fetch_grid_for_source(
+    *,
+    source: str,
+    token: str,
     login: str | None,
+    author_email: str | None,
+    org: str | None,
+    repo: str | None,
 ) -> ContributionGrid:
-    if args.source == "profile":
+    if source == "profile":
         if login is None:
             raise ValueError("missing required config: GITHUB_LOGIN")
         return fetch_contribution_grid(token=token, login=login)
 
-    if args.source == "commit-search":
-        if not args.author_email and not args.org and not args.repo:
+    if source == "commit-search":
+        if not author_email and not org and not repo:
             raise ValueError(
                 "--source commit-search requires --author-email, --org, or --repo"
             )
-        if args.org and args.repo:
+        if org and repo:
             raise ValueError("--org and --repo cannot be used together")
         return fetch_commit_search_grid(
             token=token,
-            author_email=args.author_email,
-            org=args.org,
-            repo=args.repo,
+            author_email=author_email,
+            org=org,
+            repo=repo,
         )
 
-    raise ValueError(f"unknown source: {args.source}")
+    raise ValueError(f"unknown source: {source}")
 
 
 def _uninstall(args: argparse.Namespace) -> None:

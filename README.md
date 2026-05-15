@@ -34,6 +34,7 @@ Overrides are command-specific and must appear after the subcommand:
 doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
 push: --source, --org, --repo, --author-email, --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode, --velocity, --no-velocity
+refresh: --config, --token, --awtrix-url, --awtrix-app-duration
 uninstall: --awtrix-url, --awtrix-app-name
 ```
 
@@ -58,6 +59,8 @@ github-contrib-awtrix push \
   --source commit-search \
   --org OWNER \
   --color-mode purple
+github-contrib-awtrix refresh \
+  --config ~/.config/github-contrib-awtrix/rotation.toml
 github-contrib-awtrix uninstall
 ```
 
@@ -66,6 +69,10 @@ code to install. `install` creates the named page with a placeholder; `push`
 updates that page with the current contribution grid.
 
 `push` fetches once, then renders each requested output from the same data.
+
+`refresh` reads a TOML config and updates multiple AWTRIX CustomApps in order.
+It is useful for local scheduled refresh via LaunchD. See
+[local refresh docs](docs/local-refresh.md).
 
 Sources:
 
@@ -134,5 +141,6 @@ rolled back.
 ## Docs
 
 - [Docs index](docs/README.md)
+- [Local scheduled refresh](docs/local-refresh.md)
 - [GitHub data spec](docs/specs/local-service.md)
 - [AWTRIX display spec](docs/specs/awtrix-display.md)

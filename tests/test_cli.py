@@ -257,6 +257,62 @@ def test_push_no_velocity_overrides_env(
     assert pushed == [False]
 
 
+def test_refresh_config_pushes_multiple_apps(
+    monkeypatch,
+    tmp_path: Path,
+    sample_grid: ContributionGrid,
+) -> None:
+    fetches: list[tuple[str, str | None, str | None, str | None]] = []
+    pushed: list[tuple[str, str, bool, int]] = []
+
+    config_path = tmp_path / "rotation.toml"
+    config_path.write_text(
+        """
+[[apps]]
+app_name = "github_green"
+source = "profile"
+login = "octocat"
+color_mode = "green"
+velocity = true
+
+[[apps]]
+app_name = "github_purple"
+source = "commit-search"
+org = "example-org"
+color_mode = "purple"
+velocity = false
+awtrix_app_duration = 12
+"""
+    )
+
+    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
+    monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
+
+    def fake_fetch_commit_search_grid(**kwargs):
+        fetches.append((kwargs["author_email"], kwargs["org"], kwargs["repo"], "ok"))
+        return sample_grid
+
+    monkeypatch.setattr(cli, "fetch_commit_search_grid", fake_fetch_commit_search_grid)
+    monkeypatch.setattr(
+        cli.AwtrixClient,
+        "push_grid",
+        lambda _, app_name, __, duration_seconds, color_mode, velocity: pushed.append(
+            (app_name, color_mode, velocity, duration_seconds)
+        ),
+    )
+
+    exit_code = cli.main(["refresh", "--config", str(config_path)])
+
+    assert exit_code == 0
+    assert fetches == [(None, "example-org", None, "ok")]
+    assert pushed == [
+        ("github_green", "green", True, 7),
+        ("github_purple", "purple", False, 12),
+    ]
+
+
 def test_commit_search_source_does_not_require_login_or_repo(
     monkeypatch,
     sample_grid: ContributionGrid,
