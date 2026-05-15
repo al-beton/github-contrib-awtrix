@@ -18,13 +18,10 @@ checking a graph before pushing it to the display:
 
 ## Features
 
-- Show a GitHub profile contribution calendar.
-- Show commit activity for a specific repository.
-- Show commit activity across a visible organization.
+- Show a specific user's GitHub profile contribution calendar.
+- Show non-user-specific commit activity for a repository or organization.
 - Show commit activity for a bot, agent, or user by exact commit author email.
 - Combine an author email with an organization or repository scope.
-- Render terminal and PNG previews.
-- Push the graph to an AWTRIX CustomApp over local HTTP.
 - Refresh several CustomApps from a private TOML rotation config.
 - Run that refresh locally on a schedule, for example with LaunchD.
 - Use GitHub-like colors or custom `matrix`, `green`, `purple`, `yellow`,
@@ -34,16 +31,6 @@ checking a graph before pushing it to the display:
 The Ulanzi/AWTRIX display is 32 x 8 pixels. The graph uses 32 columns for the
 last 32 calendar weeks and 7 rows for days of the week; the eighth row is left
 blank unless the velocity overlay is enabled.
-
-Profile mode and commit-search mode are intentionally different:
-
-- `profile` uses GitHub's profile contribution calendar.
-- `commit-search` counts commits visible to the configured token.
-
-Commit-search is useful for repos, orgs, bots, and agents, but it does not
-include profile-only activity such as issues, PRs, reviews, discussions, or
-co-authored commits. Broader selectors such as GitHub teams or enterprises are
-future design work, not current CLI features.
 
 ## Install
 
@@ -68,7 +55,7 @@ GITHUB_CONTRIB_VELOCITY=false
 
 GitHub's GraphQL API requires a token even for profile calendar requests. For
 private repositories or organizations, use a token that can read the relevant
-repositories. Do not commit `.env`.
+repositories.
 
 ## Quick Start
 
@@ -130,6 +117,17 @@ Remove the AWTRIX CustomApp page:
 uv run github-contrib-awtrix uninstall
 ```
 
+## Data Sources
+
+`profile` is the default source and uses GitHub's profile contribution calendar.
+It is the right choice when you want the graph to look like a user's GitHub
+profile.
+
+`commit-search` counts commits visible to the configured token. It is useful for
+repositories, organizations, bots, and agents, but it does not include
+profile-only activity such as issues, PRs, reviews, discussions, or co-authored
+commits.
+
 ## Local Rotation
 
 For a multi-screen display rotation, keep a private TOML config outside the repo:
@@ -163,7 +161,9 @@ LaunchD setup, logs, and frequency changes.
 Preview flags currently belong to `push`, so `AWTRIX_URL` is still required when
 writing previews.
 
-## Docs
+## Further Reading
+
+For more detail, see:
 
 - [Docs index](docs/README.md)
 - [Local scheduled refresh](docs/local-refresh.md)
