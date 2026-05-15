@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -9,7 +10,7 @@ from pathlib import Path
 from github_contrib_awtrix.awtrix import AwtrixClient, AwtrixError
 from github_contrib_awtrix.colors import COLOR_MODES, ColorMode
 from github_contrib_awtrix.commit_search import fetch_commit_search_grid
-from github_contrib_awtrix.config import resolve_config
+from github_contrib_awtrix.config import load_dotenv, resolve_config
 from github_contrib_awtrix.github import GitHubError, fetch_contribution_grid
 from github_contrib_awtrix.grid import ContributionGrid
 from github_contrib_awtrix.refresh import RefreshApp, load_refresh_config
@@ -254,16 +255,15 @@ def _refresh(args: argparse.Namespace) -> None:
         require_github=False,
         require_awtrix=True,
     )
-    if config.token is None:
-        raise ValueError("missing required config: GITHUB_TOKEN")
     if config.awtrix_url is None:
         raise ValueError("missing required config: AWTRIX_URL")
 
     client = AwtrixClient(config.awtrix_url)
+    dotenv = load_dotenv()
     for app in refresh_config.apps:
         _refresh_app(
             app,
-            token=config.token,
+            token=_refresh_token(app, default_token=config.token, dotenv=dotenv),
             awtrix_app_duration=args.awtrix_app_duration,
             client=client,
         )
@@ -302,6 +302,23 @@ def _refresh_app(
         velocity=config.velocity,
     )
     print(f"Refreshed AWTRIX CustomApp {config.awtrix_app_name}", file=sys.stderr)
+
+
+def _refresh_token(
+    app: RefreshApp,
+    *,
+    default_token: str | None,
+    dotenv: dict[str, str],
+) -> str:
+    if app.token_env is None:
+        if default_token is None:
+            raise ValueError("missing required config: GITHUB_TOKEN")
+        return default_token
+
+    token = os.environ.get(app.token_env) or dotenv.get(app.token_env)
+    if not token:
+        raise ValueError(f"missing required config: {app.token_env}")
+    return token
 
 
 def _fetch_grid_for_source(
