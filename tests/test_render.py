@@ -127,6 +127,20 @@ def test_display_color_modes_have_distinct_scales(
         "#ffd60a",
         "#ffffff",
     ]
+    assert [contribution_color(day, "blue") for day in days] == [
+        "#000000",
+        "#001a33",
+        "#005fb8",
+        "#1d9bf0",
+        "#ffffff",
+    ]
+    assert [contribution_color(day, "orange") for day in days] == [
+        "#000000",
+        "#2b0f00",
+        "#a33a00",
+        "#ff8c1a",
+        "#ffffff",
+    ]
 
 
 def _grid_with_counts(counts: list[int]) -> ContributionGrid:
