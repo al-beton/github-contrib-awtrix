@@ -22,7 +22,7 @@ def test_no_command_prints_help(capsys) -> None:
 
 def test_json_stdout(monkeypatch, capsys, sample_grid: ContributionGrid) -> None:
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
@@ -34,7 +34,7 @@ def test_json_stdout(monkeypatch, capsys, sample_grid: ContributionGrid) -> None
     data = json.loads(captured.out)
     assert exit_code == 0
     assert "Pushed AWTRIX CustomApp" in captured.err
-    assert data["login"] == "al-beton"
+    assert data["login"] == "octocat"
     assert len(data["grid"]) == 32
     assert len(data["grid"][0]) == 7
     assert set(data["grid"][0][0]) == {
@@ -48,7 +48,7 @@ def test_json_stdout(monkeypatch, capsys, sample_grid: ContributionGrid) -> None
 
 def test_json_file(monkeypatch, tmp_path: Path, sample_grid: ContributionGrid) -> None:
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
@@ -64,7 +64,7 @@ def test_json_file(monkeypatch, tmp_path: Path, sample_grid: ContributionGrid) -
 
 def test_png_file(monkeypatch, tmp_path: Path, sample_grid: ContributionGrid) -> None:
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
@@ -128,7 +128,7 @@ def test_push_passes_awtrix_duration(
     durations: list[int] = []
 
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
@@ -150,7 +150,7 @@ def test_push_failure_keeps_prior_outputs(
     sample_grid: ContributionGrid,
 ) -> None:
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
@@ -175,7 +175,7 @@ def test_doctor_checks_github_and_awtrix(monkeypatch, capsys) -> None:
         "resolve_config",
         lambda **_: Config(
             token="token",
-            login="al-beton",
+            login="octocat",
             awtrix_url="http://awtrix.local",
         ),
     )
@@ -186,7 +186,7 @@ def test_doctor_checks_github_and_awtrix(monkeypatch, capsys) -> None:
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert "GitHub OK for al-beton" in captured.out
+    assert "GitHub OK for octocat" in captured.out
     assert "AWTRIX OK at http://awtrix.local" in captured.out
 
 
@@ -197,7 +197,7 @@ def test_push_passes_color_mode_to_awtrix(
     pushed: list[str] = []
 
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(
@@ -219,7 +219,7 @@ def test_push_passes_velocity_to_awtrix(
     pushed: list[bool] = []
 
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
     monkeypatch.setattr(
@@ -241,7 +241,7 @@ def test_push_no_velocity_overrides_env(
     pushed: list[bool] = []
 
     monkeypatch.setenv("GITHUB_TOKEN", "token")
-    monkeypatch.setenv("GITHUB_LOGIN", "al-beton")
+    monkeypatch.setenv("GITHUB_LOGIN", "octocat")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("GITHUB_CONTRIB_VELOCITY", "true")
     monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
@@ -442,12 +442,12 @@ def test_commit_search_source_allows_org_without_author_email(
             "--source",
             "commit-search",
             "--org",
-            "AdvantageLabs",
+            "example-org",
         ]
     )
 
     assert exit_code == 0
-    assert calls == [(None, "AdvantageLabs")]
+    assert calls == [(None, "example-org")]
 
 
 def test_commit_search_source_writes_outputs_before_push(
@@ -488,7 +488,7 @@ def test_commit_search_source_writes_outputs_before_push(
     )
 
     assert exit_code == 0
-    assert json.loads(json_path.read_text())["login"] == "al-beton"
+    assert json.loads(json_path.read_text())["login"] == "octocat"
     assert pushed == [True]
 
 
@@ -514,14 +514,14 @@ def test_commit_search_source_passes_org(
             "--source",
             "commit-search",
             "--org",
-            "AdvantageLabs",
+            "example-org",
             "--author-email",
             "bot@example.com",
         ]
     )
 
     assert exit_code == 0
-    assert scopes == ["AdvantageLabs"]
+    assert scopes == ["example-org"]
 
 
 def test_commit_search_source_rejects_org_and_repo(
@@ -538,7 +538,7 @@ def test_commit_search_source_rejects_org_and_repo(
                 "--source",
                 "commit-search",
                 "--org",
-                "AdvantageLabs",
+                "example-org",
                 "--repo",
                 "owner/repo",
                 "--author-email",

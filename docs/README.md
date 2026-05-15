@@ -1,6 +1,6 @@
 # Docs
 
-Working notes for `github-contrib-awtrix`.
+Project docs for `github-contrib-awtrix`.
 
 ## Specs
 
@@ -10,9 +10,10 @@ Working notes for `github-contrib-awtrix`.
 
 ## V1 Shape
 
-1. Fetch one GitHub login's contribution calendar.
+1. Fetch a GitHub profile calendar or commit-search activity slice.
 2. Convert it into a 32-week contribution grid.
 3. Render JSON, terminal, PNG, and/or AWTRIX outputs.
+4. Optionally refresh several AWTRIX CustomApps from a private local config.
 
-Teams, org aggregation, webhooks, hosted service, OAuth, browser UI, Home
-Assistant, and firmware changes are out of scope for v1.
+Hosted service, OAuth, browser UI, Home Assistant, and firmware changes are out
+of scope for v1.

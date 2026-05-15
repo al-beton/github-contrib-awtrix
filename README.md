@@ -2,17 +2,35 @@
 
 Show a GitHub contribution graph on an AWTRIX/Ulanzi display.
 
-V1 is a Python CLI that runs once and exits. It can be run manually or scheduled
-with cron/launchd later.
+`github-contrib-awtrix` is a small Python CLI for rendering GitHub contribution
+and commit activity grids onto an AWTRIX/Ulanzi display. It can push one graph on
+demand, write terminal/PNG previews, or refresh a local rotation of AWTRIX
+CustomApps from a TOML config.
 
-## V1
+![PNG preview of a GitHub contribution grid rendered for AWTRIX](docs/assets/github-contrib-awtrix-preview.png)
 
-- one GitHub login, one exact commit author email, one org, or one repo
+## What It Supports
+
+- GitHub profile contribution calendars
+- commit-search activity for one author email, org, repo, or author within an org/repo
+- multi-app local refresh from a private TOML config
 - last 32 weeks ending today, using the local machine date
-- GitHub GraphQL contribution calendar as the data source
-- GitHub commit search as the commit activity data source
 - 32 x 8 visual frame for terminal, PNG, and AWTRIX output
-- blank/off eighth row
+- GitHub-like and custom color palettes
+- optional velocity overlay
+
+Profile mode uses GitHub's contribution calendar. Commit-search mode is
+commit-only; it is useful for bots, agents, repos, and org-wide activity, but it
+is not the same data product as a GitHub profile graph.
+
+## Install
+
+From the repo:
+
+```bash
+uv sync
+uv run github-contrib-awtrix --help
+```
 
 ## Config
 
@@ -20,7 +38,7 @@ with cron/launchd later.
 
 ```env
 GITHUB_TOKEN=...
-GITHUB_LOGIN=al-beton
+GITHUB_LOGIN=octocat
 AWTRIX_URL=http://awtrix_xxxxxx.local
 AWTRIX_APP_NAME=github_contribution_graph
 AWTRIX_APP_DURATION=7
@@ -43,25 +61,25 @@ uninstall: --awtrix-url, --awtrix-app-name
 No command prints help and does nothing.
 
 ```bash
-github-contrib-awtrix doctor
-github-contrib-awtrix install
-github-contrib-awtrix push \
+uv run github-contrib-awtrix doctor
+uv run github-contrib-awtrix install
+uv run github-contrib-awtrix push \
   --color-mode green \
   --velocity \
   --json out/grid.json \
   --terminal \
   --png out/preview.png
-github-contrib-awtrix push \
+uv run github-contrib-awtrix push \
   --source commit-search \
   --author-email bot@example.com \
   --color-mode purple
-github-contrib-awtrix push \
+uv run github-contrib-awtrix push \
   --source commit-search \
   --org OWNER \
   --color-mode purple
-github-contrib-awtrix refresh \
+uv run github-contrib-awtrix refresh \
   --config ~/.config/github-contrib-awtrix/rotation.toml
-github-contrib-awtrix uninstall
+uv run github-contrib-awtrix uninstall
 ```
 
 AWTRIX CustomApps are named pages in the device rotation. There is no on-device
@@ -84,9 +102,9 @@ Sources:
 an org/repo by combining `--author-email` with one scope. `--org` and `--repo`
 cannot be used together.
 
-`commit-search` is a commit activity calendar. It is not GitHub's profile
-contribution calendar and does not include co-authors, PR authorship, other
-branches, or team rollups.
+`commit-search` is a commit activity calendar. It does not include GitHub
+profile-only activity such as issue/PR authorship, reviews, discussions,
+co-authors, or team rollups.
 
 Color modes:
 

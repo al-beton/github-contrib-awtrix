@@ -30,7 +30,7 @@ def sample_grid() -> ContributionGrid:
         weeks.append(week)
 
     return ContributionGrid(
-        login="al-beton",
+        login="octocat",
         generated_at="2026-05-14T12:00:00+02:00",
         weeks=weeks,
     )
