@@ -4,7 +4,7 @@ from typing import Literal
 
 from github_contrib_awtrix.grid import ContributionDay
 
-ColorMode = Literal["github", "matrix", "green", "purple", "yellow"]
+ColorMode = Literal["github", "matrix", "green", "purple", "yellow", "blue", "orange"]
 
 COLOR_MODES: tuple[ColorMode, ...] = (
     "github",
@@ -12,6 +12,8 @@ COLOR_MODES: tuple[ColorMode, ...] = (
     "green",
     "purple",
     "yellow",
+    "blue",
+    "orange",
 )
 
 _GREEN_PALETTE = {
@@ -46,9 +48,27 @@ _YELLOW_PALETTE = {
     "FOURTH_QUARTILE": "#ffffff",
 }
 
+_BLUE_PALETTE = {
+    "NONE": "#000000",
+    "FIRST_QUARTILE": "#001a33",
+    "SECOND_QUARTILE": "#005fb8",
+    "THIRD_QUARTILE": "#1d9bf0",
+    "FOURTH_QUARTILE": "#ffffff",
+}
+
+_ORANGE_PALETTE = {
+    "NONE": "#000000",
+    "FIRST_QUARTILE": "#2b0f00",
+    "SECOND_QUARTILE": "#a33a00",
+    "THIRD_QUARTILE": "#ff8c1a",
+    "FOURTH_QUARTILE": "#ffffff",
+}
+
 _PALETTES = {
+    "blue": _BLUE_PALETTE,
     "green": _GREEN_PALETTE,
     "matrix": _MATRIX_PALETTE,
+    "orange": _ORANGE_PALETTE,
     "purple": _PURPLE_PALETTE,
     "yellow": _YELLOW_PALETTE,
 }
@@ -65,6 +85,10 @@ def normalize_color_mode(value: str) -> ColorMode:
         return "purple"
     if value == "yellow":
         return "yellow"
+    if value == "blue":
+        return "blue"
+    if value == "orange":
+        return "orange"
     expected = ", ".join(COLOR_MODES)
     raise ValueError(f"unknown color mode {value!r}; expected one of: {expected}")
 
