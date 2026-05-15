@@ -24,7 +24,8 @@ Overrides:
 
 ## Source Of Truth
 
-Profile mode uses GitHub GraphQL's contribution calendar.
+Profile mode uses GitHub GraphQL's contribution calendar. GitHub's GraphQL API
+requires an authenticated request, even when the visible profile data is public.
 
 Use GitHub's returned week/day structure and day fields:
 

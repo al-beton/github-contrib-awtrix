@@ -6,7 +6,7 @@ from github_contrib_awtrix.velocity import commits_per_day, format_commits_per_d
 
 def test_commits_per_day_ignores_future_padding() -> None:
     grid = ContributionGrid(
-        login="al-beton",
+        login="octocat",
         generated_at="2026-05-02T12:00:00+02:00",
         weeks=[
             [

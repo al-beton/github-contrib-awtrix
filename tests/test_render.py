@@ -157,7 +157,7 @@ def _grid_with_counts(counts: list[int]) -> ContributionGrid:
         for index in range(32 * 7)
     ]
     return ContributionGrid(
-        login="al-beton",
+        login="octocat",
         generated_at=(start + timedelta(days=len(counts) - 1)).isoformat(),
         weeks=[days[index : index + 7] for index in range(0, len(days), 7)],
     )
