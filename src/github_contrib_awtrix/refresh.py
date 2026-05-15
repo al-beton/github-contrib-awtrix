@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +10,7 @@ from github_contrib_awtrix.colors import ColorMode, normalize_color_mode
 from github_contrib_awtrix.commit_search import parse_org, parse_repo
 
 Source = Literal["profile", "commit-search"]
+TOKEN_ENV_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 @dataclass(frozen=True)
@@ -19,6 +21,7 @@ class RefreshApp:
     org: str | None = None
     repo: str | None = None
     author_email: str | None = None
+    token_env: str | None = None
     color_mode: ColorMode | None = None
     velocity: bool | None = None
     awtrix_app_duration: str | None = None
@@ -54,6 +57,7 @@ def _parse_app(index: int, raw_app: object) -> RefreshApp:
     org = _optional_str(app, "org", index)
     repo = _optional_str(app, "repo", index)
     author_email = _optional_str(app, "author_email", index)
+    token_env = _token_env(app.get("token_env"), index)
     color_mode = _color_mode(app.get("color_mode"), index)
     velocity = _optional_bool(app, "velocity", index)
     awtrix_app_duration = _optional_positive_int_str(
@@ -94,6 +98,7 @@ def _parse_app(index: int, raw_app: object) -> RefreshApp:
         org=org,
         repo=repo,
         author_email=author_email,
+        token_env=token_env,
         color_mode=color_mode,
         velocity=velocity,
         awtrix_app_duration=awtrix_app_duration,
@@ -154,6 +159,16 @@ def _source(value: object, index: int) -> Source:
     if value == "commit-search":
         return "commit-search"
     raise ValueError(f"apps entry {index} source must be profile or commit-search")
+
+
+def _token_env(value: object, index: int) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not TOKEN_ENV_PATTERN.fullmatch(value):
+        raise ValueError(
+            f"apps entry {index} token_env must be an environment variable name"
+        )
+    return value
 
 
 def _color_mode(value: object, index: int) -> ColorMode | None:

@@ -262,7 +262,7 @@ def test_refresh_config_pushes_multiple_apps(
     tmp_path: Path,
     sample_grid: ContributionGrid,
 ) -> None:
-    fetches: list[tuple[str, str | None, str | None, str | None]] = []
+    fetches: list[tuple[str | None, str | None, str | None, str | None]] = []
     pushed: list[tuple[str, str, bool, int]] = []
 
     config_path = tmp_path / "rotation.toml"
@@ -272,6 +272,7 @@ def test_refresh_config_pushes_multiple_apps(
 app_name = "github_green"
 source = "profile"
 login = "octocat"
+token_env = "PROFILE_TOKEN"
 color_mode = "green"
 velocity = true
 
@@ -279,21 +280,29 @@ velocity = true
 app_name = "github_purple"
 source = "commit-search"
 org = "example-org"
+token_env = "ORG_TOKEN"
 color_mode = "purple"
 velocity = false
 awtrix_app_duration = 12
 """
     )
 
-    monkeypatch.setenv("GITHUB_TOKEN", "token")
+    monkeypatch.setenv("PROFILE_TOKEN", "profile-token")
+    monkeypatch.setenv("ORG_TOKEN", "org-token")
     monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
     monkeypatch.setenv("AWTRIX_APP_DURATION", "7")
-    monkeypatch.setattr(cli, "fetch_contribution_grid", lambda **_: sample_grid)
 
-    def fake_fetch_commit_search_grid(**kwargs):
-        fetches.append((kwargs["author_email"], kwargs["org"], kwargs["repo"], "ok"))
+    def fake_fetch_contribution_grid(**kwargs):
+        fetches.append((None, kwargs["login"], None, kwargs["token"]))
         return sample_grid
 
+    def fake_fetch_commit_search_grid(**kwargs):
+        fetches.append(
+            (kwargs["author_email"], kwargs["org"], kwargs["repo"], kwargs["token"])
+        )
+        return sample_grid
+
+    monkeypatch.setattr(cli, "fetch_contribution_grid", fake_fetch_contribution_grid)
     monkeypatch.setattr(cli, "fetch_commit_search_grid", fake_fetch_commit_search_grid)
     monkeypatch.setattr(
         cli.AwtrixClient,
@@ -306,11 +315,46 @@ awtrix_app_duration = 12
     exit_code = cli.main(["refresh", "--config", str(config_path)])
 
     assert exit_code == 0
-    assert fetches == [(None, "example-org", None, "ok")]
+    assert fetches == [
+        (None, "octocat", None, "profile-token"),
+        (None, "example-org", None, "org-token"),
+    ]
     assert pushed == [
         ("github_green", "green", True, 7),
         ("github_purple", "purple", False, 12),
     ]
+
+
+def test_refresh_config_falls_back_to_default_token(
+    monkeypatch,
+    tmp_path: Path,
+    sample_grid: ContributionGrid,
+) -> None:
+    tokens: list[str] = []
+
+    config_path = tmp_path / "rotation.toml"
+    config_path.write_text(
+        """
+[[apps]]
+app_name = "github_green"
+source = "profile"
+login = "octocat"
+"""
+    )
+
+    monkeypatch.setenv("GITHUB_TOKEN", "default-token")
+    monkeypatch.setenv("AWTRIX_URL", "http://awtrix.local")
+    monkeypatch.setattr(
+        cli,
+        "fetch_contribution_grid",
+        lambda **kwargs: tokens.append(kwargs["token"]) or sample_grid,
+    )
+    monkeypatch.setattr(cli.AwtrixClient, "push_grid", lambda *_, **__: None)
+
+    exit_code = cli.main(["refresh", "--config", str(config_path)])
+
+    assert exit_code == 0
+    assert tokens == ["default-token"]
 
 
 def test_commit_search_source_does_not_require_login_or_repo(
