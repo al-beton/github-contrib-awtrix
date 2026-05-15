@@ -163,12 +163,7 @@ writing previews.
 
 ## Further Reading
 
-For more detail, see:
-
-- [Docs index](docs/README.md)
-- [Local scheduled refresh](docs/local-refresh.md)
-- [GitHub data spec](docs/specs/local-service.md)
-- [AWTRIX display spec](docs/specs/awtrix-display.md)
+For guides and reference docs, see [docs](docs/README.md).
 
 ## Development
 

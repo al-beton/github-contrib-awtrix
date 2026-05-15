@@ -2,11 +2,14 @@
 
 Project docs for `github-contrib-awtrix`.
 
-## Specs
+## Guides
 
 - [Local scheduled refresh](local-refresh.md)
-- [GitHub data](specs/local-service.md)
-- [AWTRIX display](specs/awtrix-display.md)
+
+## Reference
+
+- [GitHub data](reference/github-data.md)
+- [AWTRIX display](reference/awtrix-display.md)
 
 ## Current Shape
 
