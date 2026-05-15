@@ -88,6 +88,8 @@ Color modes:
 - `green`: black empty cells with a green-to-white scale
 - `purple`: black empty cells with a purple-to-white scale
 - `yellow`: black empty cells with an amber/yellow-to-white scale
+- `blue`: black empty cells with a blue-to-white scale
+- `orange`: black empty cells with an orange-to-white scale
 
 Velocity overlay:
 
