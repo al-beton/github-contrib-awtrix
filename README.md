@@ -11,10 +11,15 @@ to make a tiny physical status display.
 
 ![AWTRIX display showing GitHub contribution activity on a desk](docs/assets/awtrix-desk-demo.jpg)
 
-The same renderer can write a PNG preview, which is useful when tuning colors or
-checking a graph before pushing it to the display:
+The display can show the graph by itself:
 
-![PNG preview of a GitHub contribution grid rendered for AWTRIX](docs/assets/github-contrib-awtrix-preview.png)
+![AWTRIX display showing a GitHub contribution graph without velocity overlay](docs/assets/github-contrib-awtrix-no-overlay.jpg)
+
+Or it can include the optional velocity overlay. The same renderer can also write
+a tiny image preview, which is useful when tuning colors or checking a graph
+before pushing it to the display:
+
+![Preview of a GitHub contribution grid rendered for AWTRIX](docs/assets/github-contrib-awtrix-preview.jpg)
 
 ## Features
 
