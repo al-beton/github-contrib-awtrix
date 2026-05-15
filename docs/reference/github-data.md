@@ -79,9 +79,10 @@ Each cell includes:
 - `contributionLevel`
 - `color`
 
-## Out Of Scope For V1
+## Out Of Scope
 
-- teams
+- GitHub team selectors
+- GitHub enterprise selectors
 - co-author counting
 - search result sets larger than GitHub's commit search cap
 - GitHub webhooks
