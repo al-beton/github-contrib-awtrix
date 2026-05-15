@@ -1,0 +1,24 @@
+# Example local refresh config.
+# Keep your real config private and outside the repo, for example:
+# ~/.config/github-contrib-awtrix/rotation.toml
+
+[[apps]]
+app_name = "github_green"
+source = "profile"
+login = "octocat"
+color_mode = "green"
+velocity = true
+
+[[apps]]
+app_name = "github_purple"
+source = "commit-search"
+org = "example-org"
+color_mode = "purple"
+velocity = true
+
+[[apps]]
+app_name = "github_yellow"
+source = "commit-search"
+repo = "example-org/example-repo"
+color_mode = "yellow"
+velocity = true
