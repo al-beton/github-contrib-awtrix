@@ -94,17 +94,32 @@ Update:
 - `--config` path
 - log paths
 - label, if desired
+- the `uv` executable path, if LaunchD cannot find `uv` through `/usr/bin/env`
 
 Load it:
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.example.github-contrib-awtrix.refresh.plist
+launchctl bootstrap gui/$(id -u) \
+  ~/Library/LaunchAgents/com.example.github-contrib-awtrix.refresh.plist
 ```
 
 Run once immediately:
 
 ```bash
 launchctl start com.example.github-contrib-awtrix.refresh
+```
+
+Check status:
+
+```bash
+launchctl print gui/$(id -u)/com.example.github-contrib-awtrix.refresh
+```
+
+Unload it:
+
+```bash
+launchctl bootout gui/$(id -u) \
+  ~/Library/LaunchAgents/com.example.github-contrib-awtrix.refresh.plist
 ```
 
 Logs go to the `StandardOutPath` / `StandardErrorPath` set in the plist.

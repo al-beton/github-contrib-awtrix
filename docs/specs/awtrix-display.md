@@ -116,7 +116,7 @@ or refreshes the page when needed.
 Push happens after JSON, terminal, and PNG outputs. If AWTRIX is unreachable, the
 command exits non-zero and prior outputs remain.
 
-## Out Of Scope For V1
+## Out Of Scope
 
 - MQTT requirement
 - Home Assistant

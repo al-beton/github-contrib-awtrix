@@ -1,29 +1,49 @@
 # github-contrib-awtrix
 
-Show a GitHub contribution graph on an AWTRIX/Ulanzi display.
+An AWTRIX 3 CustomApp flow for showing GitHub contribution and commit activity
+on a Ulanzi pixel display.
 
-`github-contrib-awtrix` is a small Python CLI for rendering GitHub contribution
-and commit activity grids onto an AWTRIX/Ulanzi display. It can push one graph on
-demand, write terminal/PNG previews, or refresh a local rotation of AWTRIX
-CustomApps from a TOML config.
+[AWTRIX 3](https://github.com/Blueforcer/awtrix3) is custom firmware for the
+Ulanzi Smart Pixel Clock TC001 and other matrix-clock builds. This project uses
+its local HTTP CustomApp API to render GitHub-style activity grids on the
+display. I built it for my desk; it keeps me motivated, and it was a fun excuse
+to make a tiny physical status display.
 
 ![AWTRIX display showing GitHub contribution activity on a desk](docs/assets/awtrix-desk-demo.jpg)
 
+The same renderer can write a PNG preview, which is useful when tuning colors or
+checking a graph before pushing it to the display:
+
 ![PNG preview of a GitHub contribution grid rendered for AWTRIX](docs/assets/github-contrib-awtrix-preview.png)
 
-## What It Supports
+## Features
 
-- GitHub profile contribution calendars
-- commit-search activity for one author email, org, repo, or author within an org/repo
-- multi-app local refresh from a private TOML config
-- last 32 weeks ending today, using the local machine date
-- 32 x 8 visual frame for terminal, PNG, and AWTRIX output
-- GitHub-like and custom color palettes
-- optional velocity overlay
+- Show a GitHub profile contribution calendar.
+- Show commit activity for a specific repository.
+- Show commit activity across a visible organization.
+- Show commit activity for a bot, agent, or user by exact commit author email.
+- Combine an author email with an organization or repository scope.
+- Render terminal and PNG previews.
+- Push the graph to an AWTRIX CustomApp over local HTTP.
+- Refresh several CustomApps from a private TOML rotation config.
+- Run that refresh locally on a schedule, for example with LaunchD.
+- Use GitHub-like colors or custom `matrix`, `green`, `purple`, `yellow`,
+  `blue`, and `orange` palettes.
+- Optionally overlay velocity as average commits per day.
 
-Profile mode uses GitHub's contribution calendar. Commit-search mode is
-commit-only; it is useful for bots, agents, repos, and org-wide activity, but it
-is not the same data product as a GitHub profile graph.
+The Ulanzi/AWTRIX display is 32 x 8 pixels. The graph uses 32 columns for the
+last 32 calendar weeks and 7 rows for days of the week; the eighth row is left
+blank unless the velocity overlay is enabled.
+
+Profile mode and commit-search mode are intentionally different:
+
+- `profile` uses GitHub's profile contribution calendar.
+- `commit-search` counts commits visible to the configured token.
+
+Commit-search is useful for repos, orgs, bots, and agents, but it does not
+include profile-only activity such as issues, PRs, reviews, discussions, or
+co-authored commits. Broader selectors such as GitHub teams or enterprises are
+future design work, not current CLI features.
 
 ## Install
 
@@ -34,9 +54,7 @@ uv sync
 uv run github-contrib-awtrix --help
 ```
 
-## Config
-
-`.env` provides defaults. CLI flags override `.env`.
+Create a private `.env` file:
 
 ```env
 GITHUB_TOKEN=...
@@ -48,115 +66,102 @@ GITHUB_CONTRIB_COLOR_MODE=github
 GITHUB_CONTRIB_VELOCITY=false
 ```
 
-Overrides are command-specific and must appear after the subcommand:
+GitHub's GraphQL API requires a token even for profile calendar requests. For
+private repositories or organizations, use a token that can read the relevant
+repositories. Do not commit `.env`.
 
-```text
-doctor: --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration
-install: --awtrix-url, --awtrix-app-name, --awtrix-app-duration
-push: --source, --org, --repo, --author-email, --token, --login, --awtrix-url, --awtrix-app-name, --awtrix-app-duration, --color-mode, --velocity, --no-velocity
-refresh: --config, --token, --awtrix-url, --awtrix-app-duration
-uninstall: --awtrix-url, --awtrix-app-name
-```
+## Quick Start
 
-## Command Shape
-
-No command prints help and does nothing.
+Check GitHub and AWTRIX connectivity:
 
 ```bash
 uv run github-contrib-awtrix doctor
+```
+
+Install the AWTRIX CustomApp page:
+
+```bash
 uv run github-contrib-awtrix install
+```
+
+Push a profile graph:
+
+```bash
 uv run github-contrib-awtrix push \
   --color-mode green \
-  --velocity \
+  --velocity
+```
+
+Write local previews while also updating AWTRIX:
+
+```bash
+uv run github-contrib-awtrix push \
   --json out/grid.json \
   --terminal \
   --png out/preview.png
+```
+
+Show a repository or organization commit graph:
+
+```bash
 uv run github-contrib-awtrix push \
   --source commit-search \
-  --author-email bot@example.com \
-  --color-mode purple
+  --repo OWNER/REPO \
+  --color-mode yellow
+
 uv run github-contrib-awtrix push \
   --source commit-search \
   --org OWNER \
   --color-mode purple
-uv run github-contrib-awtrix refresh \
-  --config ~/.config/github-contrib-awtrix/rotation.toml
+```
+
+Show an author email, optionally scoped to an org or repo:
+
+```bash
+uv run github-contrib-awtrix push \
+  --source commit-search \
+  --author-email bot@example.com \
+  --org OWNER
+```
+
+Remove the AWTRIX CustomApp page:
+
+```bash
 uv run github-contrib-awtrix uninstall
 ```
 
-AWTRIX CustomApps are named pages in the device rotation. There is no on-device
-code to install. `install` creates the named page with a placeholder; `push`
-updates that page with the current contribution grid.
+## Local Rotation
 
-`push` fetches once, then renders each requested output from the same data.
+For a multi-screen display rotation, keep a private TOML config outside the repo:
 
-`refresh` reads a TOML config and updates multiple AWTRIX CustomApps in order.
-It is useful for local scheduled refresh via LaunchD. See
-[local refresh docs](docs/local-refresh.md).
+```bash
+mkdir -p ~/.config/github-contrib-awtrix
+cp examples/rotation.toml ~/.config/github-contrib-awtrix/rotation.toml
+```
 
-Sources:
+Then refresh all configured AWTRIX apps:
 
-- `profile`: the default; uses `GITHUB_LOGIN` and GitHub's profile contribution calendar
-- `commit-search`: counts commits visible to the token using at least one of `--author-email`, `--org`, or `--repo`
+```bash
+uv run github-contrib-awtrix refresh \
+  --config ~/.config/github-contrib-awtrix/rotation.toml
+```
 
-`commit-search` can count a whole visible org with `--org OWNER`, one repo with
-`--repo OWNER/REPO`, one author with `--author-email EMAIL`, or an author inside
-an org/repo by combining `--author-email` with one scope. `--org` and `--repo`
-cannot be used together.
-
-`commit-search` is a commit activity calendar. It does not include GitHub
-profile-only activity such as issue/PR authorship, reviews, discussions,
-co-authors, or team rollups.
-
-Color modes:
-
-- `github`: GitHub's returned colors
-- `matrix`: black empty cells with brighter matrix greens
-- `green`: black empty cells with a green-to-white scale
-- `purple`: black empty cells with a purple-to-white scale
-- `yellow`: black empty cells with an amber/yellow-to-white scale
-- `blue`: black empty cells with a blue-to-white scale
-- `orange`: black empty cells with an orange-to-white scale
-
-Velocity overlay:
-
-- off by default
-- enabled with `GITHUB_CONTRIB_VELOCITY=true` or `push --velocity`
-- disabled for a command with `push --no-velocity`
-- displays average commits per day over the visible real days
-- draws the compact value, such as `0.4/d`, `12/d`, `1.2k/d`, or `1.2M/d`, over the bottom-left of the grid
-- promotes cleanly across large suffixes: `999/d`, `1k/d`, `999k/d`, `1M/d`, `1B/d`
-- applies to terminal, PNG, and AWTRIX output
+The repo includes an hourly LaunchD example at
+`examples/launchd/com.example.github-contrib-awtrix.refresh.plist`. See
+[Local scheduled refresh](docs/local-refresh.md) for the config fields,
+LaunchD setup, logs, and frequency changes.
 
 ## Outputs
 
-- `push --json` writes 32 x 7 contribution data to stdout
-- `push --json <path>` writes 32 x 7 contribution data to a file
-- `push --terminal` prints a 32 x 8 ANSI color preview
-- `push --png <path>` writes a 32 x 8 PNG preview at 10x scale; path is required
-- `push` sends the 32 x 8 frame to AWTRIX over local HTTP
+- `push --json` writes 32 x 7 contribution data to stdout.
+- `push --json <path>` writes 32 x 7 contribution data to a file.
+- `push --terminal` prints a 32 x 8 ANSI color preview.
+- `push --png <path>` writes a 32 x 8 PNG preview at 10x scale.
+- `push` sends the 32 x 8 frame to AWTRIX over local HTTP.
 
-The preview flags currently belong to `push`, so the command still requires
-`AWTRIX_URL` and updates the AWTRIX CustomApp after writing previews.
-
-Output order is:
-
-```text
-json -> terminal -> png -> AWTRIX
-```
-
-If one output fails, the command exits non-zero. Already-written outputs are not
-rolled back.
-
-## Implementation
-
-- Python
-- typed code
-- `uv`
-- `ruff`
-- `ty`
-- `pytest`
-- small dependency set
+`push` fetches once, then renders each requested output from the same data.
+Preview flags currently belong to `push`, so `AWTRIX_URL` is still required when
+writing previews.
 
 ## Docs
 
@@ -164,3 +169,18 @@ rolled back.
 - [Local scheduled refresh](docs/local-refresh.md)
 - [GitHub data spec](docs/specs/local-service.md)
 - [AWTRIX display spec](docs/specs/awtrix-display.md)
+
+## Development
+
+```bash
+uv run ruff check .
+uv run ty check .
+uv run pytest
+```
+
+## References
+
+- [AWTRIX 3](https://github.com/Blueforcer/awtrix3)
+- [AWTRIX 3 API](https://blueforcer.github.io/awtrix3/#/api)
+- [GitHub GraphQL API](https://docs.github.com/en/graphql)
+- [GitHub commit search API](https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-commits)
