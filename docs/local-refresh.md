@@ -73,7 +73,7 @@ uv run github-contrib-awtrix refresh \
 The command refreshes each app in order and exits. If one app fails, the command
 exits non-zero so scheduled logs show the problem.
 
-## LaunchD
+## launchd
 
 The example plist runs hourly:
 
@@ -94,7 +94,7 @@ Update:
 - `--config` path
 - log paths
 - label, if desired
-- the `uv` executable path, if LaunchD cannot find `uv` through `/usr/bin/env`
+- the `uv` executable path, if launchd cannot find `uv` through `/usr/bin/env`
 
 Load it:
 

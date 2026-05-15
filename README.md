@@ -23,7 +23,7 @@ checking a graph before pushing it to the display:
 - Show commit activity for a bot, agent, or user by exact commit author email.
 - Combine an author email with an organization or repository scope.
 - Refresh several CustomApps from a private TOML rotation config.
-- Run that refresh locally on a schedule, for example with LaunchD.
+- Run that refresh locally on a schedule, for example with launchd.
 - Use GitHub-like colors or custom `matrix`, `green`, `purple`, `yellow`,
   `blue`, and `orange` palettes.
 - Optionally overlay velocity as average commits per day.
@@ -144,10 +144,10 @@ uv run github-contrib-awtrix refresh \
   --config ~/.config/github-contrib-awtrix/rotation.toml
 ```
 
-The repo includes an hourly LaunchD example at
+The repo includes an hourly launchd example at
 `examples/launchd/com.example.github-contrib-awtrix.refresh.plist`. See
 [Local scheduled refresh](docs/local-refresh.md) for the config fields,
-LaunchD setup, logs, and frequency changes.
+launchd setup, logs, and frequency changes.
 
 ## Outputs
 
