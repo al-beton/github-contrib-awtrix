@@ -7,6 +7,8 @@ and commit activity grids onto an AWTRIX/Ulanzi display. It can push one graph o
 demand, write terminal/PNG previews, or refresh a local rotation of AWTRIX
 CustomApps from a TOML config.
 
+![AWTRIX display showing GitHub contribution activity on a desk](docs/assets/awtrix-desk-demo.jpg)
+
 ![PNG preview of a GitHub contribution grid rendered for AWTRIX](docs/assets/github-contrib-awtrix-preview.png)
 
 ## What It Supports
